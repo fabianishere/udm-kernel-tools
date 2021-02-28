@@ -1,0 +1,5 @@
+udm-kernel-tools (1.0.0) stable; urgency=medium
+
+  * Initial release of udm-kernel-tools.
+
+ -- Fabian Mastenbroek <mail.fabianm@gmail.com>  Mon, 1 Mar 2021 21:58:16 +0100

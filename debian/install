@@ -1,0 +1,8 @@
+README.md usr/share/doc/udm-kernel-tools
+debian/copyright usr/share/doc/udm-kernel-tools
+man/udm-kernel-boot.8 usr/share/man/man8
+build/modules usr/lib/udm-kernel-tools
+kexec-mod/user/redir.so usr/lib/udm-kernel-tools
+udm-kernel-do-load usr/lib/udm-kernel-tools
+udm-kernel-boot.init.d usr/lib/udm-kernel-tools
+udm-kernel-boot usr/bin

@@ -1,0 +1,3 @@
+[submodule "kexec-mod"]
+	path = kexec-mod
+	url = git@github.com:fabianishere/kexec-mod.git

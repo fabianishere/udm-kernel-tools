@@ -1,0 +1,42 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Build script for udm-kernel-tools.
+#
+# Copyright (C) 2021 Fabian Mastenbroek.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+include /usr/share/dpkg/default.mk
+include /usr/share/dpkg/architecture.mk
+
+export GITHUB_TOKEN
+
+# Cross compilation settings
+export ARCH=${DEB_TARGET_ARCH}
+export CROSS_COMPILE=${DEB_TARGET_MULTIARCH}-
+
+BUILD_DIR ?= build
+KEXEC_MOD_SRC ?= kexec-mod
+
+# The UDM versions to support for the build
+UDM_VERSIONS ?= 1.8.6 1.9.0 1.9.0-10
+
+%:
+	dh $@
+
+${BUILD_DIR}/modules/v%:
+	$(MAKE) -f debian/rules.d/kexec-mod.mk UDM_VERSION=$*
+
+override_dh_auto_build: | ${KEXEC_MOD_SRC} $(addprefix ${BUILD_DIR}/modules/v, ${UDM_VERSIONS})
+	dh_auto_build --sourcedirectory=${KEXEC_MOD_SRC}/user
+
+override_dh_shlibdeps:
+
+override_dh_clean:
+	dh_clean
+	dh_auto_clean --sourcedirectory=${KEXEC_MOD_SRC}/user
+	rm -rf ${BUILD_DIR}

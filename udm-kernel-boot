@@ -1,0 +1,36 @@
+#!/bin/bash
+# Bash script for booting into custom kernels on the UDM (Pro).
+#
+# Copyright (C) 2021 Fabian Mastenbroek.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+set -e
+
+TOOLS_PATH=/usr/lib/udm-kernel-tools
+
+usage() { echo "Usage: $0 <IMAGE>" 1>&2; exit 1; }
+
+copy() { 
+    scp -P "$(cat /etc/unifi-os/ssh_proxy_port)" -o StrictHostKeyChecking=no -q -r "$1" "root@localhost:$2"
+}
+
+if [ -z "$1" ]; then
+    usage
+fi
+
+# Copy over udm-kernel-tools, kexec and kernel image to host
+copy $TOOLS_PATH /usr/lib
+copy $TOOLS_PATH/udm-kernel-boot.init.d /etc/init.d/S00000kexec
+copy /sbin/kexec /sbin/
+copy "$1" /tmp/$(basename $1)
+
+# Load the kernel image into memory
+ssh-proxy "$TOOLS_PATH/udm-kernel-do-load /tmp/$(basename $1)"
+
+# Perform the actual reboot procedure
+echo "Rebooting into kernel..."
+ssh-proxy "reboot"

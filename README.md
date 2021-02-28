@@ -20,10 +20,34 @@ Although [udm-unlock](https://github.com/fabianishere/udm-unlock) could be used
 to overwrite the kernel boot image, due to kernel image signature verification,
 this will probably result in a bricked device.
 
-We can work around this issue by employing Linux' [kexec](https://en.wikipedia.org/wiki/Kexec) 
+We can work around this issue by employing Linux' [kexec](https://en.wikipedia.org/wiki/Kexec)
 functionality, which enables Linux to act as a second stage bootloader for a
 custom kernel. Since _kexec_ is not supported by the stock kernel running on the
-UDM/UDM-Pro, we must backport this it using a [loadable kernel module](https://github.com/fabianishere/kexec-mod-arm64).
+UDM/UDM-Pro, we must backport this it using a [loadable kernel module](https://github.com/fabianishere/kexec-mod).
+
+## Building manually
+You may also choose to build the package yourself.
+
+#### Prerequisites
+To start, make sure you have installed at least the following packages:
+
+```bash
+apt install devscripts debhelper wget git gcc-aarch64-linux-gnu
+```
+
+#### Obtaining the source
+```bash
+git clone --recursive https://github.com/fabianishere/udm-kernel-tools
+```
+
+#### Building
+Navigate now to the root directory of the repository and build the package
+as follows:
+```bash
+debuild -uc -us -aarm64 --lintian-opts --profile debian
+```
+This will generate in the parent directory the Debian package which you can
+install on your device.
 
 ## License
 The code is released under the GPLv2 license. See [COPYING.txt](/COPYING.txt).
