@@ -25,6 +25,41 @@ functionality, which enables Linux to act as a second stage bootloader for a
 custom kernel. Since _kexec_ is not supported by the stock kernel running on the
 UDM/UDM-Pro, we must backport this it using a [loadable kernel module](https://github.com/fabianishere/kexec-mod).
 
+## Installation
+SSH into your UniFi Dream Machine and enter the UniFi OS shell as follows:
+```bash
+unifi-os shell
+```
+
+Select from the [Releases](https://github.com/fabianishere/pve-edge-kernel/releases) page
+the package version you want to install and download the selected Debian package,
+for instance:
+
+```bash
+wget https://github.com/fabianishere/udm-kernel-tools/releases/download/v1.0.0/udm-kernel-tools_1.0.0_arm64.deb
+apt install ./udm-kernel-tools_1.0.0_arm64.deb
+```
+
+## Usage
+**Warning**  
+Using these tools might lead to system instability or data loss.
+Make sure you know what you are doing and ensure you have a backup!
+
+Enter again the UniFi OS shell on your device:
+```bash
+unifi-os shell
+```
+
+Now boot into the custom kernel as follows:
+```bash
+udm-kernel-boot /path/to/kernel/image
+```
+The SSH connection will become unresponsive and eventually terminate when the device reboots. 
+
+### Obtaining kernel images
+To built a custom kernel image or download a custom pre-built kernel for your
+UniFi Dream Machine, visit the [udm-kernel](https://github.com/fabianishere/udm-kernel) repository.
+
 ## Building manually
 You may also choose to build the package yourself.
 
