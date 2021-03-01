@@ -1,0 +1,33 @@
+name: Build
+
+on: push
+
+jobs:
+  build:
+    runs-on: [ubuntu-18.04]
+    if: ${{ !contains(github.event.head_commit.message, 'skip ci') }}
+    steps:
+    - name: Checkout Sources
+      uses: actions/checkout@v2
+      with:
+        path: udm-kernel-tools
+        submodules: recursive
+    - name: Setup Dependencies
+      run: sudo apt-get install devscripts debhelper wget git gcc-aarch64-linux-gnu
+    - name: Build Package
+      run: |
+        cd udm-kernel-tools
+        debuild -eGITHUB_TOKEN -uc -us -aarm64 --lintian-opts --profile debian
+      env:
+        GITHUB_TOKEN: ${{secrets.PAT}}
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-artifacts
+        if-no-files-found: error
+        path: |
+          *.deb
+          *.build*
+          *.changes
+          *.dsc
+
