@@ -10,27 +10,77 @@
 
 set -e
 
+## Command line interface
+usage()
+{
+	cat << EOF
+
+Usage: $0 [-i initrd] kernel
+
+Options:
+  -i initrd	Path to initial ram disk to boot with.
+
+See udm-kernel-boot(8) for further details.
+
+EOF
+}
+
+INITRD_IMAGE=
+
+[ $# -eq 0 ] && usage
+while getopts ":hi:" arg; do
+    case $arg in
+    i)
+        INITRD_IMAGE=$OPTARG
+        ;;
+    h | *) # Display help.
+        usage
+        exit 0
+        ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+KERNEL_IMAGE=$1
 TOOLS_PATH=/usr/lib/udm-kernel-tools
 
-usage() { echo "Usage: $0 <IMAGE>" 1>&2; exit 1; }
+if [ ! -f "$KERNEL_IMAGE" ]; then
+    usage
+    exit 1
+fi
 
-copy() { 
+copy() {
     scp -P "$(cat /etc/unifi-os/ssh_proxy_port)" -o StrictHostKeyChecking=no -q -r "$1" "root@localhost:$2"
 }
 
-if [ -z "$1" ]; then
-    usage
-fi
+# Function to prepare the host system.
+# This will copy over udm-kernel-tools, kexec and kernel image to host
+udm_prepare() {
+    copy $TOOLS_PATH /usr/lib
+    copy /sbin/kexec /sbin/
+    copy "$1" "/tmp/$(basename "$1")"
+    if [ -n "$2" ]; then
+        copy "$2" "/tmp/$(basename "$2")"
+    fi
+    copy $TOOLS_PATH/udm-kernel-boot.init.d /etc/init.d/S00000kexec
+}
 
-# Copy over udm-kernel-tools, kexec and kernel image to host
-copy $TOOLS_PATH /usr/lib
-copy $TOOLS_PATH/udm-kernel-boot.init.d /etc/init.d/S00000kexec
-copy /sbin/kexec /sbin/
-copy "$1" /tmp/$(basename $1)
+# Function to load kernel image into memory.
+udm_load_kernel() {
+    if [ -n "$2" ]; then
+        ssh-proxy "$TOOLS_PATH/udm-kernel-do-load /tmp/$(basename "$1") /tmp/$(basename "$2")"
+    else
+        ssh-proxy "$TOOLS_PATH/udm-kernel-do-load /tmp/$(basename "$1")"
+    fi
+}
 
-# Load the kernel image into memory
-ssh-proxy "$TOOLS_PATH/udm-kernel-do-load /tmp/$(basename $1)"
+# Function to boot into kernel.
+udm_boot_kernel() {
+    ssh-proxy "reboot"
+}
 
-# Perform the actual reboot procedure
+udm_prepare "$KERNEL_IMAGE" "$INITRD_IMAGE"
+udm_load_kernel "$KERNEL_IMAGE" "$INITRD_IMAGE"
+
 echo "Rebooting into kernel..."
-ssh-proxy "reboot"
+udm_boot_kernel

@@ -11,7 +11,7 @@
 do_stop() {
     export LD_PRELOAD=/usr/lib/udm-kernel-tools/redir.so
 
-    test "x`cat /sys/kernel/kexec_loaded`y" = "x1y" || exit 0
+    test "x$(cat /sys/kernel/kexec_loaded)y" = "x1y" || exit 0
     test -x /sbin/kexec || exit 0
 
     printf "Rebooting machine using kexec..."
@@ -22,17 +22,17 @@ do_stop() {
 }
 
 case "$1" in
-  start)
+start)
     # No-op
     ;;
-  restart|reload)
+restart | reload)
     echo "Error: argument '$1' not supported"
     exit 3
     ;;
-  stop)
+stop)
     do_stop
     ;;
-  *)
+*)
     echo "Usage: $0 {start|stop}"
     exit 3
     ;;

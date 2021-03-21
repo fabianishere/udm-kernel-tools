@@ -12,7 +12,7 @@ Homepage: https://github.com/fabianishere/udm-kernel-tools
 
 Package: udm-kernel-tools
 Architecture: arm64
-Depends: kexec-tools, ${misc:Depends}
+Depends: kexec-tools, busybox-static, kmod, cpio, ${misc:Depends}
 Section: admin
 Priority: optional
 Description: Tools for bootstrapping custom kernels on the UniFi Dream Machine

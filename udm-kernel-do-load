@@ -10,30 +10,37 @@
 
 set -e
 
-BASEDIR=$(realpath $(dirname "$0"))
+BASEDIR=$(realpath "$(dirname "$0")")
 UDM_VERSION=$(uname -r | sed 's/.*v\([0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\)\?\).*/\1/')
 MODULE_DIR=$BASEDIR/modules/v$UDM_VERSION
 
-# Check if the kernel version is supported
-if [ ! -d "$MODULE_DIR" ]; then
-    echo "Kernel version not supported (v$UDM_VERSION)"
-    echo "Make sure you have installed the latest version of udm-kernel-tools..."
-    exit 1
-fi
+KERNEL_IMAGE=$1
+INITRD_IMAGE=$2
 
 # Check whether the kernel modules are already inserted
 if [ ! -e /dev/kexec ]; then
     echo "Inserting kexec kernel modules..."
 
+    # Check if the kernel version is supported
+    if [ ! -d "$MODULE_DIR" ]; then
+        echo "Kernel version not supported (v$UDM_VERSION)"
+        echo "Make sure you have installed the latest version of udm-kernel-tools..."
+        exit 1
+    fi
+
     # We need to shim the hypervisor vectors on the UDM since its kernel
     # has no support for kexec at all.
-    insmod $MODULE_DIR/kexec_mod_arm64.ko shim_hyp=1
-    insmod $MODULE_DIR/kexec_mod.ko
+    insmod "$MODULE_DIR"/kexec_mod_arm64.ko shim_hyp=1
+    insmod "$MODULE_DIR"/kexec_mod.ko
 fi
 
 # We assume that the redirection library is in the same directory as
 # the script.
 export LD_PRELOAD=$BASEDIR/redir.so
 
-echo "Loading kernel image" $(basename $1)
-/sbin/kexec -l "$1" --reuse-cmdline
+echo "Loading kernel image $(basename "$KERNEL_IMAGE")"
+if [ -n "$INITRD_IMAGE" ]; then
+    /sbin/kexec -l "$KERNEL_IMAGE" --initrd="$INITRD_IMAGE" --reuse-cmdline
+else
+    /sbin/kexec -l "$KERNEL_IMAGE" --reuse-cmdline
+fi
