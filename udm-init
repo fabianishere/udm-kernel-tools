@@ -23,6 +23,14 @@ setup_system() {
     clear
 }
 
+# Setup watchdog to prevent the device from rebooting while setting up.
+setup_watchdog() {
+    if [ -e /dev/watchdog ]; then
+        echo "udm-init: starting watchdog..."
+        watchdog -t 2 /dev/watchdog
+    fi
+}
+
 # Setup the modprobe configuration for loading older versions of proprietary
 # kernel modules.
 setup_modprobe_config() {
@@ -30,7 +38,7 @@ setup_modprobe_config() {
     touch "$OVERLAY_UPPER"/etc/modprobe.d/udm-kernel-tools.conf
     KERNEL_MODDIR=$(find "$OVERLAY_ROOT"/lib/modules/ -mindepth 1 -maxdepth 1 -type d | head -n1)
     KERNEL_RELEASE=$(basename "$KERNEL_MODDIR")
-    if [ -d "$KERNEL_MODDIR/extra" ]; then 
+    if [ -d "$KERNEL_MODDIR/extra" ]; then
     	for MODPATH in "$KERNEL_MODDIR"/extra/*.ko; do
         	MODNAME=$(basename "$MODPATH" | sed 's/\.ko//')
         	echo "install $MODNAME /sbin/modprobe --ignore-install -f -S $KERNEL_RELEASE $MODNAME" >> "$OVERLAY_UPPER"/etc/modprobe.d/udm-kernel-tools.conf
@@ -70,6 +78,7 @@ get_opt() {
 
 # Perform initial system setup
 setup_system
+setup_watchdog
 
 # Defaults
 init="/sbin/init"
