@@ -17,13 +17,10 @@ setup_system() {
     mount -t proc proc /proc
     mount -t sysfs sysfs /sys
     mount -t devtmpfs none /dev
-
-    # Disable kernel messages from popping onto the screen and clear the screen
-    echo 0 > /proc/sys/kernel/printk
-    clear
 }
 
-# Setup watchdog to prevent the device from rebooting while setting up.
+# Setup watchdog to prevent the device from resetting during the initramfs boot
+# procedure. If we do not enable the watchdog, the system will reset in 5 seconds.
 setup_watchdog() {
     if [ -e /dev/watchdog ]; then
         echo "udm-init: starting watchdog..."
@@ -31,8 +28,20 @@ setup_watchdog() {
     fi
 }
 
-# Setup the modprobe configuration for loading older versions of proprietary
-# kernel modules.
+# Procedure to wait for the root device to appear. This may not be the case
+# immediately when the device boots up. Retry for five times or fail.
+setup_wait_root() {
+    n=0
+    while [ "$n" -lt 5 ] && [ ! -e "$1" ]; do
+        n=$(( n + 1 ))
+        sleep 2
+    done
+
+    [ -e "$1" ]
+}
+
+# Setup the modprobe configuration to force load older versions of proprietary
+# kernel modules (e.g., ubnthal and ubnt_common).
 setup_modprobe_config() {
     mkdir -p "$OVERLAY_UPPER"/etc/modprobe.d
     touch "$OVERLAY_UPPER"/etc/modprobe.d/udm-kernel-tools.conf
@@ -56,7 +65,8 @@ setup_disable_overlay() {
     chmod +x "$OVERLAY_UPPER"/sbin/mount_ram_overlay.sh
 }
 
-# Setup kmod for overriding modules
+# Setup kmod to manage the kernel modules. We need kmod to force insert the
+# proprietary kernel modules from Ubiquiti.
 setup_kmod() {
     mkdir -p "$OVERLAY_UPPER"/sbin "$OVERLAY_UPPER"/bin
     cp /bin/kmod "$OVERLAY_UPPER"/bin/kmod
@@ -65,7 +75,8 @@ setup_kmod() {
     done
 }
 
-# Setup the kernel modules
+# Setup the kernel modules. This copies the kernel modules from the kernel
+# into the root filesystem.
 setup_modules() {
     mkdir -p "$OVERLAY_UPPER"/lib/modules
     cp -r /lib/modules/* "$OVERLAY_UPPER"/lib/modules
@@ -97,6 +108,13 @@ for i in $(cat /proc/cmdline); do
 done
 
 echo "udm-init: running initial setup [root=$root, init=$init]"
+
+# Wait for root device to appear. This may take a few seconds.
+echo "udm-init: waiting for root device..."
+if ! setup_wait_root "$root"; then
+     echo "udm-init: root device not found, dropping to a rescue shell..."
+     exec sh
+fi
 
 OVERLAY=/overlay
 OVERLAY_ROOT=$OVERLAY/root_ro
