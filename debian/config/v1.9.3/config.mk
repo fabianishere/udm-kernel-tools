@@ -7,5 +7,5 @@
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 
-UDM_VERSION = 1.9.2
+UDM_VERSION = 1.9.3
 UDM_COMMIT = cbc07337f9f10c2330e7e1e1c5a4c7019967286f
