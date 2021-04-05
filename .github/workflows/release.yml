@@ -16,7 +16,9 @@ jobs:
         path: udm-kernel-tools
         submodules: recursive
     - name: Setup Dependencies
-      run: sudo apt-get install devscripts debhelper wget git gcc-aarch64-linux-gnu
+      run: |
+        sudo apt-get install devscripts git gcc-aarch64-linux-gnu equivs
+        sudo mk-build-deps --install udm-kernel-tools/debian/control
     - name: Build Package
       run: |
         cd udm-kernel-tools
@@ -64,4 +66,3 @@ jobs:
         name: udm-kernel-tools ${{ steps.format_release.outputs.release }}
         body: ${{ steps.format_release.outputs.changelog }}
         files: build-artifacts/*
-
