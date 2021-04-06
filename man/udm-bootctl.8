@@ -1,0 +1,44 @@
+.TH "UDM-BOOTCTL" "8" "" "udm-kernel-tools" "udm-bootctl"
+.SH NAME
+udm-bootctl \- Manage custom kernels for the UniFi Dream Machine (Pro)
+.SH SYNOPSIS
+.HP \w'\fBudm-bootctl\fR\ 'u
+\fBudm-bootctl\fR [OPTIONS...] {COMMAND}
+.SH "DESCRIPTION"
+\fBudm-bootctl\fR
+uses the kexec functionality of the Linux kernel to boot into custom kernels on
+the UniFi Dream Machine (Pro).
+.SH "COMMANDS"
+.PP
+These following commands are available to the user\&:
+.PP
+\fBlist\fR
+.RS 4
+Shows all the installed kernel images which the user can boot to.
+.RE
+.PP
+\fBboot\fR [\fI<kernel>\fR]
+.RS 4
+Boots into the specified kernel image using kexec. If no kernel path or version is specified,
+the default kernel will be selected.
+.RE
+.PP
+\fBset-default\fR \fI<kernel>\fR
+.RS 4
+Sets the default kernel to the specified kernel version.
+.SH "OPTIONS"
+.PP
+The following options are understood:
+.PP
+\fB\-h, \-\-help\fR
+.RS 4
+Print a short help text and exit\&.
+.SH FILES
+.TP
+.I /usr/lib/udm-kernel-tools
+Package files
+.TP
+.I /usr/share/doc/udm-kernel-tools
+Documentation
+.SH "SEE ALSO"
+udm-mkinitramfs(8)

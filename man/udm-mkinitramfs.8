@@ -1,28 +1,24 @@
-.TH udm-mkinitcpio 8 "March 2021" Linux "User Manuals"
+.TH "UDM-MKINITRAMFS" "8" "" "udm-kernel-tools" "udm-mkinitramfs"
 .SH NAME
-udm-mkinitcpio \- Build an initial ram disk for custom kernels
+udm-mkinitramfs \- Build an initial ram disk for custom kernels
 .SH SYNOPSIS
-.B udm-mkinitcpio
+.B udm-mkinitramfs
 .IR kernel
 .SH DESCRIPTION
-.B udm-mkinitcpio
+.B udm-mkinitramfs
 builds an initial ram disk for custom kernels.
-
 .SH OPTIONS
 .TP
 \fB\-o \fI outfile
 Write the image to
 .IR outfile .
-
 .TP
 \fIversion
 Set the kernel version of the initramfs image
 (defaults to the running kernel).
-
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 Display usage information and exit.
-
 .SH FILES
 .TP
 .I /usr/lib/udm-kernel-tools
@@ -30,3 +26,5 @@ Package files
 .TP
 .I /usr/share/doc/udm-kernel-tools
 Documentation
+.SH "SEE ALSO"
+udm-bootctl(8)

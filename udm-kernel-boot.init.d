@@ -14,11 +14,9 @@ do_stop() {
     test "x$(cat /sys/kernel/kexec_loaded)y" = "x1y" || exit 0
     test -x /sbin/kexec || exit 0
 
-    printf "Rebooting machine using kexec..."
-    # Clear the screen if possible
-    printf "\033[;H\033[2J"
+    echo "Rebooting machine using kexec..."
     /sbin/kexec -e
-    printf "error: kexec failed"
+    echo "error: kexec failed"
 }
 
 case "$1" in

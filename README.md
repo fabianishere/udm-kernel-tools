@@ -52,7 +52,7 @@ unifi-os shell
 
 Now boot into the custom kernel as follows:
 ```bash
-udm-kernel-boot /path/to/kernel/image
+udm-bootctl boot /path/to/kernel/image
 ```
 The SSH connection will become unresponsive and eventually terminate when the device reboots. 
 

@@ -38,7 +38,7 @@ fi
 # the script.
 export LD_PRELOAD=$BASEDIR/redir.so
 
-echo "Loading kernel image $(basename "$KERNEL_IMAGE")"
+echo "Loading kernel image"
 if [ -n "$INITRD_IMAGE" ]; then
     /sbin/kexec -l "$KERNEL_IMAGE" --initrd="$INITRD_IMAGE" --reuse-cmdline
 else
