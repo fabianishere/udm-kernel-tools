@@ -82,6 +82,11 @@ setup_modules() {
     cp -r /lib/modules/* "$OVERLAY_UPPER"/lib/modules
 }
 
+# Create a mark to indicate that the system booted via udm-kernel-tools.
+setup_mark() {
+    echo "1" > /root/run/udm-kernel-tools.txt
+}
+
 # Function for parsing command line options with "=" in them
 get_opt() {
     echo "$@" | cut -d "=" -f 2
@@ -141,6 +146,7 @@ setup_kmod
 setup_disable_overlay
 
 setup_modules
+setup_mark
 
 echo "udm-init: booting into UniFi OS..."
 # Check if $init exists and is executable
