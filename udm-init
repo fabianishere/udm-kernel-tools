@@ -125,19 +125,29 @@ OVERLAY=/overlay
 OVERLAY_ROOT=$OVERLAY/root_ro
 OVERLAY_RW=$OVERLAY/rw
 OVERLAY_UPPER=$OVERLAY_RW/upper
+OVERLAY_OVERRIDE=$OVERLAY_RW/override
 OVERLAY_WORK=$OVERLAY_RW/work
 
 # Mount the root device
 mkdir -p $OVERLAY_ROOT
 mount "$root" $OVERLAY_ROOT
 
-# Prepare overlay layer
+# Prepare read-write overlay layer
 mkdir -p $OVERLAY_RW
 mount -t tmpfs none $OVERLAY_RW
-mkdir -p $OVERLAY_UPPER $OVERLAY_WORK
+mkdir -p $OVERLAY_UPPER $OVERLAY_OVERRIDE $OVERLAY_WORK
+
+# Mount data drive and prepare read-only override layer
+ln -s $OVERLAY_ROOT/etc/fstab /etc/fstab
+mkdir -p /mnt/data
+mount /mnt/data
+mount --move /mnt/data $OVERLAY_ROOT/mnt/data
+if [ -d "$OVERLAY_ROOT/mnt/data/udm-kernel-tools/root" ]; then
+    mount --bind "$OVERLAY_ROOT/mnt/data/udm-kernel-tools/root" $OVERLAY_OVERRIDE
+fi
 
 # Mount overlay
-mount -t overlay none -olowerdir=$OVERLAY_ROOT,upperdir=$OVERLAY_UPPER,workdir=$OVERLAY_WORK /root
+mount -t overlay none -olowerdir=$OVERLAY_OVERRIDE:$OVERLAY_ROOT,upperdir=$OVERLAY_UPPER,workdir=$OVERLAY_WORK /root
 mount --rbind $OVERLAY /root/overlay
 
 echo "udm-init: initializing module workaround..."
