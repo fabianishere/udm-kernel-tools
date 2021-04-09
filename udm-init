@@ -117,8 +117,8 @@ echo "udm-init: running initial setup [root=$root, init=$init]"
 # Wait for root device to appear. This may take a few seconds.
 echo "udm-init: waiting for root device..."
 if ! setup_wait_root "$root"; then
-     echo "udm-init: root device not found, dropping to a rescue shell..."
-     exec sh
+     echo "udm-init: root device not found, aborting boot..."
+     exit 1
 fi
 
 OVERLAY=/overlay
@@ -172,5 +172,5 @@ if [ -x "/root$init" ]; then
 fi
 
 # This will only be run if the exec above failed
-echo "udm-init: failed to switch_root, dropping to a rescue shell..."
-exec sh
+echo "udm-init: failed to switch_root, aborting boot..."
+exit 1
