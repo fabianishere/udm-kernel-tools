@@ -20,13 +20,14 @@ _copy() {
     scp -P "$(cat /etc/unifi-os/ssh_proxy_port)" -o StrictHostKeyChecking=no -q -r "$1" "root@localhost:$2"
 }
 
-# Prepare the host system for a kexec boot.
+# Load kernel image and possible initramfs into memory before boot.
 # This function will copy over udm-kernel-tools, kexec and kernel image to host.
+# Then, it will use the kexec binary to load the kernel image into memory.
 # Arguments:
 # $1 - target: Target directory to copy the kernel and initramfs to.
 # $2 - kernel: Path to kernel to copy.
 # $3 - initrd: Path to initramfs to copy.
-_do_prepare() {
+_do_load() {
     target=$1
     kernel=$2
     initrd=$3
@@ -37,21 +38,16 @@ _do_prepare() {
     if [ -n "$initrd" ]; then
         _copy "$initrd" "$target/initramfs.gz"
     fi
-    _copy $TOOLS_PATH/udm-kernel-boot.init.d /etc/init.d/S00000kexec
-}
+    _copy $TOOLS_PATH/udm-kexec.init.d /etc/init.d/S00000kexec
 
-# Load kernel image and possible initramfs into memory before boot.
-# Arguments:
-# $1 - target: Target directory where the kernel is located.
-_do_load() {
-    target=$1
-
+    # Decompress kernel before loading via Kexec as it does not support
+    # compressed kernels yet.
     ssh-proxy "gunzip $target/kernel.gz"
 
-    if [ -f "$target/initramfs.gz" ]; then
-        ssh-proxy "$TOOLS_PATH/udm-kernel-do-load $target/kernel $target/initramfs.gz"
+    if [ -n "$initrd" ]; then
+        ssh-proxy "$TOOLS_PATH/udm-kexec -l $target/kernel --initrd=$target/initramfs.gz --reuse-cmdline"
     else
-        ssh-proxy "$TOOLS_PATH/udm-kernel-do-load $target/kernel"
+        ssh-proxy "$TOOLS_PATH/udm-kexec -l $target/kernel --reuse-cmdline"
     fi
 }
 
@@ -59,7 +55,7 @@ _do_load() {
 # This function triggers a reboot, which will in turn trigger the kexec command
 # as soon the the inittab services are stopped.
 _do_boot() {
-    echo "Rebooting into kernel $1..."
+    echo "Triggering system boot..."
     ssh-proxy "reboot"
 }
 
@@ -192,9 +188,10 @@ bootctl_boot() {
     fi
 
     target=$(ssh-proxy "mktemp -d -t udmXXXXXX")
-    _do_prepare "$target" "$kernel_path" "$initrd_path"
-    _do_load "$target"
-    _do_boot "$version"
+
+    echo "Loading kernel $version..."
+    _do_load "$target" "$kernel_path" "$initrd_path"
+    _do_boot
 }
 
 # Print the help message for the set-default command.

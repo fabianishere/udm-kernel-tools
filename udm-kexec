@@ -1,5 +1,5 @@
 #!/bin/sh
-# Shell script that loads the kernel image into memory.
+# Shell script that wraps the kexec binary to support the kexec module.
 #
 # Copyright (C) 2021 Fabian Mastenbroek.
 #
@@ -14,9 +14,6 @@ BASEDIR=$(realpath "$(dirname "$0")")
 UDM_VERSION=$(uname -r | sed 's/.*v\([0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\)\?\).*/\1/')
 MODULE_DIR=$BASEDIR/modules/v$UDM_VERSION
 
-KERNEL_IMAGE=$1
-INITRD_IMAGE=$2
-
 # Check whether the kernel modules are already inserted
 if [ ! -e /dev/kexec ]; then
     echo "Inserting kexec kernel modules..."
@@ -28,19 +25,14 @@ if [ ! -e /dev/kexec ]; then
         exit 1
     fi
 
-    # We need to shim the hypervisor vectors on the UDM since its kernel
+    # We need to shim the hypervisor vectors on the UDM since its stock kernel
     # has no support for kexec at all.
     insmod "$MODULE_DIR"/kexec_mod_arm64.ko shim_hyp=1
     insmod "$MODULE_DIR"/kexec_mod.ko
 fi
 
-# We assume that the redirection library is in the same directory as
-# the script.
+# The redirection library should reside in the same directory as this script.
 export LD_PRELOAD=$BASEDIR/redir.so
 
-echo "Loading kernel image"
-if [ -n "$INITRD_IMAGE" ]; then
-    /sbin/kexec -l "$KERNEL_IMAGE" --initrd="$INITRD_IMAGE" --reuse-cmdline
-else
-    /sbin/kexec -l "$KERNEL_IMAGE" --reuse-cmdline
-fi
+#
+exec /sbin/kexec "$@"
