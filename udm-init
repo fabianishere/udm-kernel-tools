@@ -161,11 +161,11 @@ setup_mark
 echo "udm-init: booting into UniFi OS..."
 # Check if $init exists and is executable
 if [ -x "/root$init" ]; then
-    # Unmount all other mounts so that the ram used by
-    # the initramfs can be cleared after switch_root
+    # Umount proc and sysfs, but move devtmpfs as we cannot umount it during
+    # the initialization phase.
     umount /proc
     umount /sys
-    umount /dev
+    mount --move /dev /root/dev
 
     # Switch to the new root and execute init
     exec switch_root /root "$init"
