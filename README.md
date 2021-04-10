@@ -45,20 +45,53 @@ apt install ./udm-kernel-tools_1.0.0_arm64.deb
 Using these tools might lead to system instability or data loss.
 Make sure you know what you are doing and ensure you have a backup!
 
-Enter again the UniFi OS shell on your device:
+### Installing a custom kernel 
+To obtain and install a custom Linux kernel for the UniFi Dream Machine (Pro),
+visit the [udm-kernel](https://github.com/fabianishere/udm-kernel) repository.
+This repository contains instructions for installing the pre-built kernels as
+well as instructions for building custom kernels yourself.
+
+### Booting into a custom kernel 
+First, list the kernels you have installed on your system as follows:
 ```bash
-unifi-os shell
+udm-bootctl list
 ```
 
-Now boot into the custom kernel as follows:
+Booting into a custom kernel is then done as follows:
 ```bash
-udm-bootctl boot /path/to/kernel/image
+udm-bootctl boot KERNEL_VERSION
 ```
-The SSH connection will become unresponsive and eventually terminate when the device reboots. 
+Alternatively, you may specify the path to the kernel image. After executing the
+command, the SSH connection will become unresponsive and eventually terminate 
+when the device reboots.
 
-### Obtaining kernel images
-To built a custom kernel image or download a custom pre-built kernel for your
-UniFi Dream Machine, visit the [udm-kernel](https://github.com/fabianishere/udm-kernel) repository.
+Once the system is back online, verify that you are running the correct kernel:
+```bash
+uname -a
+```
+
+### Auto-booting into the custom kernel
+Since the custom kernel does not persist across reboots due to the use of kexec,
+you need to perform the boot procedure after every reboot. We provide a `udm-autoboot.service`
+to automate this process.
+
+First, select the default kernel you want to boot into:
+```bash
+udm-bootctl set-default KERNEL_VERSION
+```
+Then, enable the `udm-autoboot.service` to run during system startup:
+```bash
+systemctl enable udm-autoboot.service
+```
+
+### Overriding files on root pre-boot
+Some users wish to modify files on the root filesystem before UniFi OS boots (e.g.,
+to hook into the early boot process). In order to facilitate this, `udm-kernel-tools`
+allows users to override files from the root filesystem using an overlay located
+at `/mnt/data/udm-kernel-tools/root`. 
+
+Note that changes to this directory only appear on the root filesystem after
+reboot.
 
 ## Building manually
 You may also choose to build the package yourself.
