@@ -13,8 +13,11 @@ set -e
 case "$1" in
     triggered|configure)
         echo "udm-init: configuring..."
-        for kernel in /boot/vmlinuz-*; do
-            version=$(basename "$kernel" | sed -e "s/^vmlinuz-//")
+        for kernel in /lib/modules/*; do
+            if [ ! -d "$kernel" ]; then
+                continue
+            fi
+            version=$(basename "$kernel")
 
             echo "udm-init: generating initramfs for kernel $version..."
             udm-mkinitramfs -o /boot/initramfs-"$version".gz "$version"

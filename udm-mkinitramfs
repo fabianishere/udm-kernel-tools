@@ -63,7 +63,11 @@ touch etc/mdev.conf
 
 # Copy over kernel modules
 mkdir -p lib/modules
-cp -r /lib/modules/"$KERNEL_VERSION" lib/modules
+if [ -d /lib/modules/"$KERNEL_VERSION" ]; then
+    cp -r /lib/modules/"$KERNEL_VERSION" lib/modules
+else
+    echo "No modules found for kernel $KERNEL_VERSION"
+fi
 
 cp $KMOD_PATH bin/kmod
 cp $BUSYBOX_PATH bin/busybox
