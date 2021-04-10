@@ -65,4 +65,4 @@ jobs:
       with:
         name: udm-kernel-tools ${{ steps.format_release.outputs.release }}
         body: ${{ steps.format_release.outputs.changelog }}
-        files: build-artifacts/*
+        files: build-artifacts/udm-kernel-tools_*.deb
