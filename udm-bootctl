@@ -194,6 +194,46 @@ bootctl_boot() {
     _do_boot
 }
 
+# Print the help message for the autoboot command.
+bootctl_autoboot_usage() {
+	cat << EOF
+
+Usage: $0 autoboot [OPTIONS...]
+
+ Automatically boot into custom kernel.
+
+Options:
+  -h, --help    Show this message and exit
+
+EOF
+}
+
+# Automatically boot into custom kernel
+bootctl_autoboot() {
+    while getopts ":h" arg; do
+    case $arg in
+        h | *) # Display help.
+            bootctl_autoboot_usage
+            exit 0
+            ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+
+    if ssh-proxy "test -f /.udm-kernel-tools"; then
+        echo "Successfully booted into custom kernel.."
+        # Remove mark to indicate that we are booting into a custom kernel
+        rm -f /mnt/persistent/.udm-boot-mark
+        exit 0
+    elif [ -f /mnt/persistent/.udm-boot-mark ]; then
+        echo "Custom kernel boot seems to have failed. Aborting..."
+        exit 1
+    else
+        touch /mnt/persistent/.udm-boot-mark
+        bootctl_boot
+    fi
+}
+
 # Print the help message for the set-default command.
 bootctl_set_default_usage()
 {
@@ -257,6 +297,10 @@ case $1 in
     boot)
         shift
         bootctl_boot "$@"
+        ;;
+    autoboot)
+        shift
+        bootctl_autoboot "$@"
         ;;
     set-default)
         shift

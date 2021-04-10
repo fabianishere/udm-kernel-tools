@@ -23,6 +23,12 @@ Boots into the specified kernel image using kexec. If no kernel path or version 
 the default kernel will be selected.
 .RE
 .PP
+\fBautoboot\fR
+.RS 4
+Automatically boot into the default kernel using kexec. If the tool detects that
+a previous boot failed, abort.
+.RE
+.PP
 \fBset-default\fR \fI<kernel>\fR
 .RS 4
 Sets the default kernel to the specified kernel version.

@@ -36,6 +36,9 @@ override_dh_auto_build: | ${KEXEC_MOD_SRC} $(addprefix ${BUILD_DIR}/modules/v, $
 
 override_dh_shlibdeps:
 
+override_dh_installsystemd:
+	dh_installsystemd --name=udm-autoboot --no-enable
+
 override_dh_clean:
 	dh_clean
 	dh_auto_clean --sourcedirectory=${KEXEC_MOD_SRC}/user

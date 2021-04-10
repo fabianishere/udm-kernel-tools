@@ -84,7 +84,7 @@ setup_modules() {
 
 # Create a mark to indicate that the system booted via udm-kernel-tools.
 setup_mark() {
-    echo "1" > /root/run/udm-kernel-tools.txt
+    echo "Kernel booted via udm-kernel-tools" > "$OVERLAY_UPPER"/.udm-kernel-tools
 }
 
 # Function for parsing command line options with "=" in them
