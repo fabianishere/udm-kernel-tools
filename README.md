@@ -134,6 +134,8 @@ Currently, the releases of this project support the following firmware versions:
 - 1.9.2 
 - 1.9.3
 
+To build the project for custom firmware versions, please refer to the [Maintenance Guide](MAINTENANCE.md).
+
 ## Troubleshooting
 Below is a non-exhaustive list of issues that might occur while using these
 tools. Please check these instructions before reporting an issue on issue tracker.
@@ -152,6 +154,18 @@ dmesg
 When you cannot connect to your device a few minutes after performing the boot
 procedure, the device might be stuck. Power cycle the device to restore
 the stock kernel.
+
+## Contributing
+Questions, suggestions and contributions are welcome and appreciated!
+You can contribute in various meaningful ways:
+
+* Report a bug through [Github issues](https://github.com/fabianishere/udm-kernel-tools/issues).
+* Propose and document use-cases for using this project.
+* Contribute improvements to the documentation.  
+* Provide feedback about how we can improve the project.
+* Help answer questions on our [Discussions](https://github.com/fabianishere/udm-kernel-tools/discussions) page.
+
+Advanced users may also be interested in the [Maintenance Guide](MAINTENANCE.md).
 
 ## How it works
 Bootstrapping a custom Linux kernel on the UDM/P is not trivial. By default,
