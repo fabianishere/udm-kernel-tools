@@ -26,10 +26,11 @@ UniFi Dream Machine (Pro). These use-cases include:
    [udm-utilities](https://github.com/boostchicken/udm-utilities)), its performance
    will be reduced due to it running in user-space. A custom kernel enables your 
    WireGuard VPN server to utilize the kernel implementation and run at full speed.
-2. **Multicast routing support**  
+2. [**Multicast routing support**](docs/iptv.md)  
    The stock kernel of the UDM/P does not support multicast routing which is
    needed for running `igmpproxy`. In turn, `igmpproxy` is needed to bridge
    multicast traffic between WAN and LAN, which is needed for IPTV.
+   See the [following guide](docs/iptv.md) for more information.
 3. [**Early boot modifications**](#overriding-files-on-root-pre-boot)  
    Since changes to root filesystem on the UDM/P are non-persistent. It is not
    possible with the stock kernel to perform modification to the early boot
