@@ -109,10 +109,14 @@ systemctl disable udm-autoboot.service
 ```
 
 ### Overriding files on root pre-boot
-Some users may wish to modify files on the root filesystem before UniFi OS boots 
+Some users may wish to modify files on the root filesystem before UniFi OS boots
 (e.g., to hook into the early boot process).
 In order to facilitate this, `udm-kernel-tools` allows users to override files
-from the root filesystem using an overlay located  at `/mnt/data/udm-kernel-tools/root`. 
+from the root filesystem using an overlay located  at `/mnt/data/udm-kernel-tools/root`,
+
+The overlay filesystem will be mounted *only* after running 
+`mkdir -p /overlay/root_ro/mnt/data/udm-kernel-tools/root` from within the *UniFi OS* shell
+or when running `mkdir -p /data/udm-kernel-tools/root` from outside UniFi OS. 
 
 Note that changes to this directory only appear on the root filesystem after
 reboot.
@@ -129,10 +133,10 @@ Since the project requires firmware-specific binaries (e.g., kernel modules), yo
 possibly need to upgrade the tools after you have upgraded to a new firmware version.
 Currently, the releases of this project support the following firmware versions:
 
-- 1.8.6 
+- 1.8.6
 - 1.9.0
-- 1.9.1 
-- 1.9.2 
+- 1.9.1
+- 1.9.2
 - 1.9.3
 
 To build the project for custom firmware versions, please refer to the [Maintenance Guide](MAINTENANCE.md).
