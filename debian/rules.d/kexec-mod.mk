@@ -29,7 +29,7 @@ all: ${UDM_MODULE_DIR}/kexec_mod.ko ${UDM_MODULE_DIR}/kexec_mod_arm64.ko
 
 ${UDM_KERNEL_TARBALL}:
 	mkdir -p $(dir ${UDM_KERNEL_TARBALL})/
-	wget -P $(dir ${UDM_KERNEL_TARBALL})/ -N --header="Authorization: token ${GITHUB_TOKEN}" ${UDM_KERNEL_URL}
+	wget -P $(dir ${UDM_KERNEL_TARBALL})/ -N $(if ${GITHUB_TOKEN},--header="Authorization: token ${GITHUB_TOKEN}") ${UDM_KERNEL_URL}
 
 ${UDM_KERNEL_SRC}: ${UDM_KERNEL_TARBALL}
 	mkdir -p $@
