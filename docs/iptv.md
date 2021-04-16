@@ -80,7 +80,7 @@ UDM/P runs Linux under the hood, we can configure our own VLAN interface.
 To perform the configuration and obtain the IP address on IPTV network automatically,
 I have created the following scripts:
 
-1. Create `/mnt/data/on_data.d/10-iptv.sh`:
+1. Create `/mnt/data/on_boot.d/10-iptv.sh`:
    ```bash
    #!/bin/sh
    # Add IPTV VLAN (4) interface on WAN1
@@ -187,8 +187,8 @@ I have created the following scripts:
    ```
 3. Make the scripts executable and run the configuration:
    ```bash
-   chmod +x /mnt/data/on_data.d/10-iptv.sh /mnt/persistent/udhcpc-hook.sh
-   /mnt/data/on_data.d/10-iptv.sh
+   chmod +x /mnt/data/on_boot.d/10-iptv.sh /mnt/persistent/udhcpc-hook.sh
+   /mnt/data/on_boot.d/10-iptv.sh
    ```
 4. Verify that the VLAN interface has obtained an IP address:
    ```bash
