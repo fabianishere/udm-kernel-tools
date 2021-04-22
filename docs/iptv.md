@@ -86,9 +86,8 @@ I have created the following scripts:
    # Add IPTV VLAN (4) interface on WAN1
    ip link add link eth8 name eth8.4 type vlan id 4
    # Start DHCP client on IPTV VLAN
-   udhcpc -p /run/udhcpc-vlan.pid -d /dev/null -s /mnt/persistent/udhcpc-hook.sh -i eth8.4 \
-       -O 121 \  # DHCP option 121: classless IP
-       -x 60:'"IPTV_RG"' -b # DHCP option 60
+   udhcpc -p /run/udhcpc-vlan.pid -s /mnt/persistent/udhcpc-hook.sh -i eth8.4 \
+        -O 121 -x 60:'"IPTV_RG"' # DHCP options necessary for IPTV
    # NAT the IP-ranges to IPTV network
    iptables -t nat -A POSTROUTING -d 213.75.112.0/21 -j MASQUERADE -o eth8.4
    iptables -t nat -A POSTROUTING -d 217.166.0.0/16 -j MASQUERADE -o eth8.4
