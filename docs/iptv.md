@@ -11,6 +11,7 @@ For IPTV on the UniFi Security Gateway, please refer to the
 - [Prerequisites](#prerequisites)
 - [Setting up Internet Connection](#setting-up-internet-connection)
 - [Creating VLAN and obtaining IP address](#creating-vlan-and-obtaining-ip-address)
+- [Configuring Internal LAN](#configuring-internal-lan)
 - [Configuring igmpproxy](#configuring-igmpproxy)
 
 ## Global Design
@@ -202,6 +203,22 @@ I have created the following scripts:
    ...
    XX.XX.XX.X/21 via XX.XX.XX.X dev eth8.4
    ```
+
+## Configuring Internal LAN
+To operate correctly, the IPTV decoders on the internal LAN possibly require 
+additional DHCP options. You can add these DHCP options as follows: 
+
+1. In your UniFi Dashboard, go to **Settings > Networks**.
+2. Select the LAN network on which IPTV will be used.
+3. Go to **Advanced > DHCP Option** and add the following options:  
+   
+   | Name      | Code | Type       | Value          |
+   |-----------|:----:|------------|----------------|
+   | IPTV      |  60  | Text       | IPTV_RG        |
+   | Broadcast |  28  | IP Address | _BROADCAST_ADDRESS_ |
+
+   Replace _BROADCAST_ADDRESS_ with the broadcast address of your LAN network (e.g., 192.168.1.255).
+
 
 ## Configuring igmpproxy
 The final step is to configure `igmpproxy`. This is necessary to bridge the 
