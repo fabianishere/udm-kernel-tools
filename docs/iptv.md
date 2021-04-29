@@ -7,12 +7,13 @@ For IPTV on the UniFi Security Gateway, please refer to the
 [following guide](https://github.com/basmeerman/unifi-usg-kpn).
 
 ## Contents
-- [Global Design](#global-design)
-- [Prerequisites](#prerequisites)
-- [Setting up Internet Connection](#setting-up-internet-connection)
-- [Creating VLAN and obtaining IP address](#creating-vlan-and-obtaining-ip-address)
-- [Configuring Internal LAN](#configuring-internal-lan)
-- [Configuring igmpproxy](#configuring-igmpproxy)
+1. [Global Design](#global-design)
+1. [Prerequisites](#prerequisites)
+1. [Setting up Internet Connection](#setting-up-internet-connection)
+1. [Configuring Internal LAN](#configuring-internal-lan)
+1. [Creating VLAN and obtaining IP address](#creating-vlan-and-obtaining-ip-address)
+1. [Configuring igmpproxy](#configuring-igmpproxy)
+1. [Troubleshooting and Known Issues](#troubleshooting-and-known-issues)
 
 ## Global Design
 ```
@@ -72,6 +73,27 @@ These steps might differ per ISP, so please check the requirements for your ISP.
    the semicolons (":") replaced with dashes ("-").
 6. For KPN, **Password** should be set to `ppp`.
 
+## Configuring Internal LAN
+To operate correctly, the IPTV decoders on the internal LAN possibly require
+additional DHCP options. You can add these DHCP options as follows:
+
+1. In your UniFi Dashboard, go to **Settings > Networks**.
+2. Select the LAN network on which IPTV will be used.
+3. Go to **Advanced > DHCP Option** and add the following options:
+
+   | Name      | Code | Type       | Value          |
+   |-----------|:----:|------------|----------------|
+   | IPTV      |  60  | Text       | IPTV_RG        |
+   | Broadcast |  28  | IP Address | _BROADCAST_ADDRESS_ |
+
+   Replace _BROADCAST_ADDRESS_ with the broadcast address of your LAN network.
+   To get this address, you can obtain it by setting all bits outside the
+   subnet mask of your IP range, for instance:
+   ```
+   192.168.X.1/24 => 192.168.X.255
+   192.168.0.1/16 => 192.168.255.255
+   ```
+   See [here](https://en.wikipedia.org/wiki/Broadcast_address) for more information.
 
 ## Creating VLAN and obtaining IP address
 The next challenge we face is that the UniFi interface currently does not support
@@ -79,7 +101,9 @@ having multiple VLAN interfaces on the same WAN port. Fortunately, since the
 UDM/P runs Linux under the hood, we can configure our own VLAN interface.
 
 To perform the configuration and obtain the IP address on IPTV network automatically,
-I have created the following scripts:
+I have created the following scripts. These have been tested for the UDM Pro.
+
+**If you have the UDM base model**, please update the WAN port from `eth8` to `eth4`.
 
 1. Create `/mnt/data/on_boot.d/10-iptv.sh`:
    ```bash
@@ -204,22 +228,6 @@ I have created the following scripts:
    XX.XX.XX.X/21 via XX.XX.XX.X dev eth8.4
    ```
 
-## Configuring Internal LAN
-To operate correctly, the IPTV decoders on the internal LAN possibly require 
-additional DHCP options. You can add these DHCP options as follows: 
-
-1. In your UniFi Dashboard, go to **Settings > Networks**.
-2. Select the LAN network on which IPTV will be used.
-3. Go to **Advanced > DHCP Option** and add the following options:  
-   
-   | Name      | Code | Type       | Value          |
-   |-----------|:----:|------------|----------------|
-   | IPTV      |  60  | Text       | IPTV_RG        |
-   | Broadcast |  28  | IP Address | _BROADCAST_ADDRESS_ |
-
-   Replace _BROADCAST_ADDRESS_ with the broadcast address of your LAN network (e.g., 192.168.1.255).
-
-
 ## Configuring igmpproxy
 The final step is to configure `igmpproxy`. This is necessary to bridge the 
 multicast needed for IPTV between WAN and LAN.
@@ -247,7 +255,8 @@ multicast needed for IPTV between WAN and LAN.
    ##------------------------------------------------------
    ## Configuration for eth1 (Downstream Interface)
    ##------------------------------------------------------
-   phyint br0 downstream  ratelimit 0  threshold 1
+   ## Update to br0 to bridge interface of target LAN!
+   phyint br0 downstream  ratelimit 0  threshold 1 
 
    # Disable other interfaces
    phyint ppp0 disabled
@@ -259,3 +268,15 @@ multicast needed for IPTV between WAN and LAN.
    ```bash
    systemctl enable --now igmpproxy
    ```
+
+## Troubleshooting and Known Issues
+Below is a non-exhaustive list of issues that might occur while getting IPTV to
+run on the UDM/P. Please check these instructions before reporting an issue on issue tracker.
+
+**IPTV stops working after changes to the UDM/P configuration**  
+If you re-provision your UDM/P, the VLAN interface is removed and IPTV will stop
+working. This issue cannot be fixed until Ubiquiti adds support for multiple
+VLANs on WAN ports in the UI. To workaround this issue, re-run the script:
+```bash
+/mnt/data/on_boot.d/10-iptv.sh
+```
