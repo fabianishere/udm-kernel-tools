@@ -278,5 +278,8 @@ If you re-provision your UDM/P, the VLAN interface is removed and IPTV will stop
 working. This issue cannot be fixed until Ubiquiti adds support for multiple
 VLANs on WAN ports in the UI. To workaround this issue, re-run the script:
 ```bash
+# Re-create the VLAN and obtain IP
 /mnt/data/on_boot.d/10-iptv.sh
+# Restart IGMP Proxy
+podman exec -it unifi-os systemctl restart igmpproxy
 ```
