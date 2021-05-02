@@ -54,7 +54,7 @@ unifi-os shell
 ```
 
 ### Installing udm-kernel-tools
-Select from the [Releases](https://github.com/fabianishere/pve-edge-kernel/releases) page
+Select from the [Releases](https://github.com/fabianishere/udm-kernel-tools/releases) page
 the package version you want to install and download the selected Debian package,
 for instance:
 
