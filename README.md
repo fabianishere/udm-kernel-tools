@@ -79,9 +79,11 @@ Booting into a custom kernel is then done as follows:
 ```bash
 udm-bootctl boot KERNEL_VERSION
 ```
-Alternatively, you may specify the path to the kernel image. After executing the
-command, the SSH connection will become unresponsive and eventually terminate 
-when the device reboots.
+Alternatively, you may specify the path to the kernel image.
+**Note** that after executing this command, the SSH connection might become 
+unresponsive or might even be killed with an error message. This is expected
+behavior and after a minute, you should be able to log back into your device
+via SSH.
 
 Once the system is back online, verify that you are running the correct kernel:
 ```bash
@@ -159,6 +161,11 @@ dmesg
 When you cannot connect to your device a few minutes after performing the boot
 procedure, the device might be stuck. Power cycle the device to restore
 the stock kernel.
+
+**SSH session exits with error after boot command**  
+After executing the `boot` command, your SSH connection might become unresponsive
+or even exit with an error message. This is expected behavior, and you should
+be able to log back in to your device after a minute.
 
 ## Contributing
 Questions, suggestions and contributions are welcome and appreciated!
