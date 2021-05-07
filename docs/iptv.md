@@ -122,7 +122,7 @@ I have created the following scripts. These have been tested for the UDM Pro.
    your ISP.
 2. Create `/mnt/persistent/udhcpc-hook.sh:`
    ```bash
-   #!/bin/bash
+   #!/bin/sh
    # busybox udhcp setup script
    # shellcheck shell=sh disable=SC1008
 
