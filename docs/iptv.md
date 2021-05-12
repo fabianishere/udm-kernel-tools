@@ -108,19 +108,21 @@ I have created the following scripts. These have been tested for the UDM Pro.
 1. Create `/mnt/data/on_boot.d/10-iptv.sh`:
    ```bash
    #!/bin/sh
-   # Add IPTV VLAN (4) interface on WAN1
-   ip link add link eth8 name eth8.4 type vlan id 4
+   WAN_PORT=eth8
+   
+   # Add IPTV VLAN (4) interface on WAN port
+   ip link add link "$WAN_PORT" name iptv type vlan id 4
    # Start DHCP client on IPTV VLAN
-   udhcpc -p /run/udhcpc-vlan.pid -s /mnt/persistent/udhcpc-hook.sh -i eth8.4 \
+   udhcpc -p /run/udhcpc-vlan.pid -d /bin/true -s /mnt/persistent/udhcpc-hook.sh -i iptv \
         -O 121 -x 60:'"IPTV_RG"' # DHCP options necessary for IPTV
    # NAT the IP-ranges to IPTV network
-   iptables -t nat -A POSTROUTING -d 213.75.112.0/21 -j MASQUERADE -o eth8.4
-   iptables -t nat -A POSTROUTING -d 217.166.0.0/16 -j MASQUERADE -o eth8.4
+   iptables -t nat -A POSTROUTING -d 213.75.112.0/21 -j MASQUERADE -o iptv
+   iptables -t nat -A POSTROUTING -d 217.166.0.0/16 -j MASQUERADE -o iptv
    ```
    **Note** that this script contains configuration specifically for KPN. You need
    to change this configuration (e.g., IP ranges, VLAN ID and DHCP options) depending on
    your ISP.
-2. Create `/mnt/persistent/udhcpc-hook.sh:`
+2. Create `/mnt/persistent/udhcpc-hook.sh`:
    ```bash
    #!/bin/sh
    # busybox udhcp setup script
@@ -216,16 +218,16 @@ I have created the following scripts. These have been tested for the UDM Pro.
    ```
 4. Verify that the VLAN interface has obtained an IP address:
    ```bash
-   $ ip -4 addr show dev eth8.4
-   43: eth8.4@eth8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
-      inet XX.XX.XX.XX/22 brd XX.XX.XX.XX scope global eth8.4
+   $ ip -4 addr show dev iptv
+   43: iptv@eth8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+      inet XX.XX.XX.XX/22 brd XX.XX.XX.XX scope global iptv
         valid_lft forever preferred_lft forever
    ```
 5. Verify that you have obtained the routes from the DHCP server:
    ```bash
    $ ip route list
    ...
-   XX.XX.XX.X/21 via XX.XX.XX.X dev eth8.4
+   XX.XX.XX.X/21 via XX.XX.XX.X dev iptv
    ```
 
 ## Configuring igmpproxy
@@ -244,23 +246,13 @@ multicast needed for IPTV between WAN and LAN.
    ```bash
    quickleave
 
-   ##------------------------------------------------------
-   ## Configuration for eth0 (Upstream Interface)
-   ##------------------------------------------------------
-   phyint eth8.4 upstream  ratelimit 0  threshold 1
+   phyint iptv upstream  ratelimit 0  threshold 1
        altnet 192.168.0.0/16 # LAN
        altnet 213.75.0.0/16 # Multicast addresses used by KPN
        altnet 217.166.0.0/16
-
-   ##------------------------------------------------------
-   ## Configuration for eth1 (Downstream Interface)
-   ##------------------------------------------------------
+   
    ## Update to br0 to bridge interface of target LAN!
    phyint br0 downstream  ratelimit 0  threshold 1 
-
-   # Disable other interfaces
-   phyint ppp0 disabled
-   phyint tun1 disabled
    ```
    **Note** that this configuration contains IP ranges and interfaces specific
    to my KPN setup. Please modify to your specific setup.
@@ -274,9 +266,8 @@ Below is a non-exhaustive list of issues that might occur while getting IPTV to
 run on the UDM/P. Please check these instructions before reporting an issue on issue tracker.
 
 **IPTV stops working after changes to the UDM/P configuration**  
-If you re-provision your UDM/P, the VLAN interface is removed and IPTV will stop
-working. This issue cannot be fixed until Ubiquiti adds support for multiple
-VLANs on WAN ports in the UI. To workaround this issue, re-run the script:
+If you re-provision your UDM/P, IPTV might stop working. 
+To workaround this issue, re-run the script:
 ```bash
 # Re-create the VLAN and obtain IP
 /mnt/data/on_boot.d/10-iptv.sh
