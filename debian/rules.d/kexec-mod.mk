@@ -43,6 +43,7 @@ ${UDM_KERNEL_SRC}/v${UDM_VERSION}.config: debian/config/v${UDM_VERSION}/config.u
 
 ${UDM_MODULE_DIR}/kexec_mod.ko ${UDM_MODULE_DIR}/kexec_mod_${ARCH}.ko: ${UDM_KERNEL_SRC}/v${UDM_VERSION}.config
 	mkdir -p ${UDM_MODULE_DIR}
+	rm -rf ${KEXEC_MOD_SRC}/kernel/orig ${KEXEC_MOD_SRC}/kernel/arch/${ARCH}/orig
 	dh_auto_build --sourcedirectory=${KEXEC_MOD_SRC}/kernel -- KDIR=$(realpath ${UDM_KERNEL_SRC}) LDFLAGS=
 	cp ${KEXEC_MOD_SRC}/kernel/kexec_mod.ko ${UDM_MODULE_DIR}/kexec_mod.ko
 	cp ${KEXEC_MOD_SRC}/kernel/arch/${ARCH}/kexec_mod_${ARCH}.ko ${UDM_MODULE_DIR}/kexec_mod_${ARCH}.ko
