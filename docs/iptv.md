@@ -254,8 +254,12 @@ multicast needed for IPTV between WAN and LAN.
    ## Update to br0 to bridge interface of target LAN!
    phyint br0 downstream  ratelimit 0  threshold 1 
    ```
-   **Note** that this configuration contains IP ranges and interfaces specific
+   **Note:** This configuration contains IP ranges and interfaces specific
    to my KPN setup. Please modify to your specific setup.
+   
+   **Note:** If you have set up **IPSec VPN** networks on your UDM/P, make sure you
+   disable the corresponding interfaces.
+   See [IGMP Proxy terminates with unknown reason](#igmp-proxy-terminates-with-unknown-reason).
 4. Enable and start `igmpproxy`:
    ```bash
    systemctl enable --now igmpproxy
@@ -265,7 +269,7 @@ multicast needed for IPTV between WAN and LAN.
 Below is a non-exhaustive list of issues that might occur while getting IPTV to
 run on the UDM/P. Please check these instructions before reporting an issue on issue tracker.
 
-**IPTV stops working after changes to the UDM/P configuration**  
+### IPTV stops working after changes to the UDM/P configuration
 If you re-provision your UDM/P, IPTV might stop working. 
 To workaround this issue, re-run the script:
 ```bash
@@ -273,4 +277,13 @@ To workaround this issue, re-run the script:
 /mnt/data/on_boot.d/10-iptv.sh
 # Restart IGMP Proxy
 podman exec -it unifi-os systemctl restart igmpproxy
+```
+
+### IGMP Proxy terminates with unknown reason
+If you are running any IPSec VPN on your UDM/P, make sure you disable the IPSec
+interfaces in the IGMP Proxy configuration (in `/etc/igmpproxy.conf`) as follows:
+```
+...
+# Repeat for each IPSec interface
+phyint l2tp disabled
 ```
