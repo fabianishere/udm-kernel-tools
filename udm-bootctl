@@ -44,11 +44,14 @@ _do_load() {
     # compressed kernels yet.
     ssh-proxy "gunzip $target/kernel.gz"
 
+    args="-l $target/kernel --reuse-cmdline"
+    # Force kexec-tools to load the kernel image inside the right memory region
+    # See https://github.com/fabianishere/udm-kernel-tools/pull/14#issuecomment-850786069
+    args+=" --mem-min=0x04000000 --mem-max=0x05000000"
     if [ -n "$initrd" ]; then
-        ssh-proxy "$TOOLS_PATH/udm-kexec -l $target/kernel --initrd=$target/initramfs.gz --reuse-cmdline"
-    else
-        ssh-proxy "$TOOLS_PATH/udm-kexec -l $target/kernel --reuse-cmdline"
+        args+=" --initrd=$target/initramfs.gz"
     fi
+    ssh-proxy "$TOOLS_PATH/udm-kexec $args"
 }
 
 # Perform the kexec boot.
