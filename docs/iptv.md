@@ -256,11 +256,18 @@ multicast needed for IPTV between WAN and LAN.
    ```
    **Note:** This configuration contains IP ranges and interfaces specific
    to my KPN setup. Please modify to your specific setup.
-   
+
    **Note:** If you have set up **IPSec VPN** networks on your UDM/P, make sure you
    disable the corresponding interfaces.
    See [IGMP Proxy terminates with unknown reason](#igmp-proxy-terminates-with-unknown-reason).
-4. Enable and start `igmpproxy`:
+4. Add a dependency on the `unifi.service`. Run `systemctl edit igmpproxy` and
+   enter:
+   ```
+   [Unit]
+   PartOf=unifi.service
+   After=unifi.service
+   ```
+5. Enable and start `igmpproxy`:
    ```bash
    systemctl enable --now igmpproxy
    ```
