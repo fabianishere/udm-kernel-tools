@@ -136,10 +136,8 @@ possibly need to upgrade the tools after you have upgraded to a new firmware ver
 Currently, the releases of this project support the following firmware versions:
 
 - 1.8.6
-- 1.9.0
-- 1.9.1
-- 1.9.2
 - 1.9.3
+- 1.10.0
 
 To build the project for custom firmware versions, please refer to the [Maintenance Guide](MAINTENANCE.md).
 
