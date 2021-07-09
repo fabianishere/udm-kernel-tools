@@ -1,10 +1,11 @@
 udm-kernel-tools (1.1.0) stable; urgency=medium
 
   * Update to kexec-mod 1.1.
-  * Add support for firmware version 1.10.0-11.
+  * Add support for firmware version 1.10.0.
   * Increase root device timeout to 30s.
+  * Drop support for firmware versions 1.9.0-1.9.2
 
- -- Fabian Mastenbroek <mail.fabianm@gmail.com>  Mon, 24 May 2021 21:28:00 +0100
+ -- Fabian Mastenbroek <mail.fabianm@gmail.com>  Fri, 9 Jul 2021 17:30:00 +0100
 
 udm-kernel-tools (1.0.0) stable; urgency=medium
 
