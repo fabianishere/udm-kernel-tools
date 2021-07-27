@@ -13,8 +13,7 @@ For IPTV on the UniFi Security Gateway, please refer to the
 1. [Prerequisites](#prerequisites)
 1. [Setting up Internet Connection](#setting-up-internet-connection)
 1. [Configuring Internal LAN](#configuring-internal-lan)
-1. [Creating VLAN and obtaining IP address](#creating-vlan-and-obtaining-ip-address)
-1. [Configuring igmpproxy](#configuring-igmpproxy)
+1. [Configuring udm-iptv](#configuring-udm-iptv)
 1. [Troubleshooting and Known Issues](#troubleshooting-and-known-issues)
 
 ## Global Design
@@ -92,7 +91,7 @@ additional DHCP options. You can add these DHCP options as follows:
 3. Go to **Advanced > DHCP Option** and add the following options:
 
    | Name      | Code | Type       | Value          |
-      |-----------|:----:|------------|----------------|
+   |-----------|:----:|------------|----------------|
    | IPTV      |  60  | Text       | IPTV_RG        |
    | Broadcast |  28  | IP Address | _BROADCAST_ADDRESS_ |
 
@@ -106,12 +105,15 @@ additional DHCP options. You can add these DHCP options as follows:
    See [here](https://en.wikipedia.org/wiki/Broadcast_address) for more
    information.
 
-## Route IPTV traffic onto LAN
+## Configuring udm-iptv
 
-Next, we use the `udm-iptv` container to route the IPTV traffic between WAN and
-LAN. SSH into your machine and run the following command. Make sure you have the
+Next, we will use the [udm-iptv](https://hub.docker.com/r/fabianishere/udm-iptv)
+container to get IPTV working on your LAN. This container uses
+[igmpproxy](https://github.com/pali/igmpproxy) to route multicast IPTV traffic between WAN and LAN.
+
+Before we set up the `udm-iptv` container, make sure you have the
 [on-boot-script](https://github.com/boostchicken/udm-utilities/tree/master/on-boot-script)
-installed.
+installed.  SSH into your machine and execute the following commands:
 
 ```bash
 tee  /mnt/data/on_boot.d/15-iptv.sh <<EOF >/dev/null
@@ -123,7 +125,7 @@ podman run --network=host --privileged \
     -e IPTV_WAN_INTERFACE="eth8" \
     -e IPTV_WAN_RANGES="213.75.112.0/21 217.166.0.0/16" \
     -e IPTV_LAN_INTERFACES="br0" \
-    fabianishere/udm-iptv:1.1
+    fabianishere/udm-iptv:1.1 -d -v
 EOF
 chmod +x /mnt/data/on_boot.d/15-iptv.sh
 ```
@@ -132,4 +134,43 @@ This script will run after every boot of your UniFi Dream Machine and set up the
 applications necessary to route the IPTV traffic.
 
 **Note:** This configuration contains IP ranges and interfaces specific to my
-KPN setup. Please modify to your specific setup.
+KPN setup. Please modify to your specific setup. See below for a list of options
+to configure the container.
+
+| Environmental Variable | Description | Default |
+| ------------------------|----------- |---------|
+| IPTV_WAN_INTERFACE      | Interface on which IPTV traffic enters the router | eth8 |
+| IPTV_WAN_RANGES         | IP ranges from which the IPTV traffic originates (separated by spaces) | 213.75.0.0/16 217.166.0.0/16 |
+| IPTV_WAN_VLAN           | ID of VLAN which carries IPTV traffic (use 0 if no VLAN is used) | 4 |
+| IPTV_WAN_VLAN_INTERFACE | Name of the VLAN interface to be created | iptv |
+| IPTV_WAN_DHCP_OPTIONS   | [DHCP options](https://busybox.net/downloads/BusyBox.html#udhcpc) to send when requesting an IP address | -O staticroutes -V IPTV_RG |
+| IPTV_LAN_INTERFACES     | Interfaces on which IPTV should be made available | br0 |
+| IPTV_LAN_RANGES         | IP ranges from which IPTV will be watched | 192.168.0.0/16 |
+
+## Troubleshooting and Known Issues
+
+Below is a non-exhaustive list of issues that might occur while getting IPTV to
+run on the UDM/P, as well as troubleshooting steps. Please check these
+instructions before reporting an issue on issue tracker.
+
+### Debugging IGMP Proxy
+
+Use the following steps to debug `igmpproxy` if it is behaving strangely:
+
+1. **Enabling debug logs**  
+   You can enable `igmpproxy` to report debug messages by adding the following
+   flags to the script in `/mnt/data/on_boot.d/15-iptv.sh`:
+   ```diff
+      podman run --network=host --privileged \
+        -e IPTV_WAN_INTERFACE="eth8" \
+        -e IPTV_WAN_RANGES="213.75.112.0/21 217.166.0.0/16" \
+        -e IPTV_LAN_INTERFACES="br0" \
+   -    fabianishere/udm-iptv:1.1
+   +    fabianishere/udm-iptv:1.1 -d -v
+      ```
+   Make sure you run the script afterwards to apply the changes.
+2. **Viewing debug logs**  
+   You may now view the debug logs of `igmpproxy` as follows:
+   ```bash
+   podman logs iptv
+   ```
