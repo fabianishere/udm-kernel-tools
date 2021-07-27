@@ -1,11 +1,7 @@
-FROM arm64v8/ubuntu:focal
+FROM arm64v8/alpine:3.14
 
-RUN export DEBIAN_FRONTEND=noninteractive \
-	&& apt-get update \
-	&& apt-get install -y --no-install-recommends systemd igmpproxy \
-	&& systemctl enable systemd-networkd igmpproxy \
-	&& rm -rf /var/cache /var/lib/apt/lists
+RUN apk add --no-cache vlan iptables igmpproxy
 
 COPY entrypoint.sh /entrypoint.sh
 
-ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
+ENTRYPOINT ["/bin/ash", "./entrypoint.sh"]

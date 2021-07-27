@@ -1,95 +1,78 @@
-#!/bin/bash
+#!/bin/ash
 
 IPTV_WAN_INTERFACE="${IPTV_WAN_INTERFACE:-eth8}"
 IPTV_WAN_RANGES="${IPTV_WAN_RANGES:-"213.75.0.0/16 217.166.0.0/16"}"
 IPTV_WAN_VLAN="${IPTV_WAN_VLAN:-4}"
+IPTV_WAN_VLAN_INTERFACE="${IPTV_WAN_VLAN_INTERFACE:-iptv}"
+IPTV_WAN_DHCP_OPTIONS="${IPTV_WAN_DHCP_OPTIONS:-"-O staticroutes -V IPTV_RG"}"
 IPTV_LAN_INTERFACES="${IPTV_LAN_INTERFACES:-br0}"
 
-# Allow autologin from root into the container
-configure_getty() {
-    mkdir -p /etc/systemd/system/console-getty.service.d
-    tee /etc/systemd/system/console-getty.service.d/override.conf <<'EOF' >/dev/null
-[Service]
-ExecStart=
-ExecStart=-/sbin/agetty --noclear --autologin root --keep-baud console 115200,38400,9600 $TERM
+# Setup the network, creating the IPTV VLAN interface if necessary
+# and obtaining an IP address for the interface.
+_network_setup() {
+    local target
+    target="$IPTV_WAN_INTERFACE"
+
+    # Make sure we obtain IP address for VLAN interface
+    if [ "$IPTV_WAN_VLAN" -ne 0 ]; then
+        echo "udm-iptv: Obtaining IP address for VLAN interface..."
+
+        target="$IPTV_WAN_VLAN_INTERFACE"
+        tee /etc/network/interfaces <<EOF >/dev/null
+auto $IPTV_WAN_VLAN_INTERFACE
+iface $IPTV_WAN_VLAN_INTERFACE inet dhcp
+    udhcpc_opts $IPTV_WAN_DHCP_OPTIONS
+    vlan-id $IPTV_WAN_VLAN
+    vlan-raw-device $IPTV_WAN_INTERFACE
 EOF
+        ifup "$IPTV_WAN_VLAN_INTERFACE"
+    fi
+
+    echo "udm-iptv: NATing IPTV network ranges (if necessary)..."
+
+    # NAT the IPTV ranges
+    for range in $IPTV_WAN_RANGES; do
+        iptables -C POSTROUTING -t nat -d "$range" -j MASQUERADE -o "$target" || iptables -A POSTROUTING -t nat -d "$range" -j MASQUERADE -o "$target"
+    done
 }
 
-# Configure IGMP Proxy to bridge multicast traffic
-configure_igmpproxy() {
-    # Construct the IGMP Proxy altnets for the WAN interface
-    IGMPPROXY_ALTNETS=$'\t'"altnet 192.168.0.0/16"$'\n'
+# Build the configuration needed by IGMP Proxy
+_igmpproxy_build_config() {
+    echo "quickleave"
+
+    local target
+    if [ "$IPTV_WAN_VLAN" -ne 0 ]; then
+        target="$IPTV_WAN_VLAN_INTERFACE"
+    else
+        target="$IPTV_WAN_INTERFACE"
+    fi
+
+    echo "phyint $target upstream  ratelimit 0  threshold 1"
+    echo "  altnet 192.168.0.0/16" # LAN subnet
     for range in $IPTV_WAN_RANGES; do
-        IGMPPROXY_ALTNETS+=$'\t'"altnet $range"$'\n'
+        echo "  altnet $range"
     done
 
     # Configure the igmpproxy interfaces
-    IGMPPROXY_DISABLED_IFS=""
-    IGMPPROXY_ENABLED_IFS=""
-    for interface in $(basename -a /sys/class/net/*); do
+    for path in /sys/class/net/*; do
+        local interface
+        interface=$(basename "$path")
         if echo "$IPTV_LAN_INTERFACES" | grep -w -q "$interface"; then
-            IGMPPROXY_ENABLED_IFS+="phyint $interface downstream  ratelimit 0  threshold 1"$'\n'
-        elif [ "$interface" != "lo" ] && [ "$interface" != "iptv" ]; then
-            IGMPPROXY_DISABLED_IFS+="phyint $interface disabled"$'\n'
+            echo "phyint $interface downstream  ratelimit 0  threshold 1"
+        elif [ "$interface" != "lo" ] && [ "$interface" != "$target" ]; then
+            echo "phyint $interface disabled"
         fi
     done
-
-    tee /etc/igmpproxy.conf <<EOF >/dev/null
-quickleave
-
-phyint iptv upstream  ratelimit 0  threshold 1
-$IGMPPROXY_ALTNETS
-
-$IGMPPROXY_ENABLED_IFS
-$IGMPPROXY_DISABLED_IFS
-EOF
-
-    mkdir /etc/systemd/system/igmpproxy.service.d
-    tee /etc/systemd/system/igmpproxy.service.d/override.conf <<EOF >/dev/null
-[Unit]
-After=network.target network-online.target
-Requires=network-online.target
-
-[Service]
-Restart=always
-EOF
 }
 
-# Setup systemd-networkd configuration
-configure_networkd() {
-    tee /etc/systemd/network/wan.network <<EOF >/dev/null
-[Match]
-Name=$IPTV_WAN_INTERFACE
-
-[VLAN]
-VLAN=iptv
-EOF
-    tee /etc/systemd/network/iptv.netdev <<EOF >/dev/null
-[NetDev]
-Name=iptv
-Kind=vlan
-
-[VLAN]
-Id=$IPTV_WAN_VLAN
-EOF
-    tee /etc/systemd/network/iptv.network <<EOF >/dev/null
-[Match]
-Name=iptv
-
-[Network]
-DHCP=ipv4
-LinkLocalAddressing=no
-IPv6AcceptRA=false
-LLMNR=false
-
-[DHCPv4]
-UseRoutes=yes
-VendorClassIdentifier=IPTV_RG
-EOF
+# Configure IGMP Proxy to bridge multicast traffic
+_igmpproxy_setup() {
+    echo "udm-iptv: Setting up igmpproxy.."
+    _igmpproxy_build_config >/etc/igmpproxy.conf
 }
 
-configure_getty
-configure_igmpproxy
-configure_networkd
+_network_setup
+_igmpproxy_setup
 
-exec /bin/systemd
+echo "udm-iptv: Starting igmpproxy.."
+exec igmpproxy -n "$@" /etc/igmpproxy.conf

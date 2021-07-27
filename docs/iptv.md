@@ -119,16 +119,11 @@ if podman container exists iptv; then
   podman rm -f iptv
 fi
 podman run --network=host --privileged \
-    --name iptv --rm -i -d \
-    -v /run:/var/run/ -v /run:/run \
+    --name iptv -i -d --restart always \
     -e IPTV_WAN_INTERFACE="eth8" \
-    -e IPTV_WAN_RANGES="213.75.0.0/16 217.166.0.0/16" \
+    -e IPTV_WAN_RANGES="213.75.112.0/21 217.166.0.0/16" \
     -e IPTV_LAN_INTERFACES="br0" \
-    fabianishere/udm-iptv:1.0
-    
-# NAT the IP-ranges to IPTV network
-iptables -t nat -A POSTROUTING -d 213.75.112.0/21 -j MASQUERADE -o iptv
-iptables -t nat -A POSTROUTING -d 217.166.0.0/16 -j MASQUERADE -o iptv
+    fabianishere/udm-iptv:1.1
 EOF
 chmod +x /mnt/data/on_boot.d/15-iptv.sh
 ```
