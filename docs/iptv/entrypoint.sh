@@ -6,6 +6,7 @@ IPTV_WAN_VLAN="${IPTV_WAN_VLAN:-4}"
 IPTV_WAN_VLAN_INTERFACE="${IPTV_WAN_VLAN_INTERFACE:-iptv}"
 IPTV_WAN_DHCP_OPTIONS="${IPTV_WAN_DHCP_OPTIONS:-"-O staticroutes -V IPTV_RG"}"
 IPTV_LAN_INTERFACES="${IPTV_LAN_INTERFACES:-br0}"
+IPTV_LAN_RANGES="${IPTV_LAN_RANGES:-"192.168.0.0/16"}"
 
 # Setup the network, creating the IPTV VLAN interface if necessary
 # and obtaining an IP address for the interface.
@@ -48,8 +49,7 @@ _igmpproxy_build_config() {
     fi
 
     echo "phyint $target upstream  ratelimit 0  threshold 1"
-    echo "  altnet 192.168.0.0/16" # LAN subnet
-    for range in $IPTV_WAN_RANGES; do
+    for range in $IPTV_LAN_RANGES $IPTV_WAN_RANGES; do
         echo "  altnet $range"
     done
 
