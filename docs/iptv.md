@@ -113,31 +113,23 @@ Next, we will use the [udm-iptv](https://hub.docker.com/r/fabianishere/udm-iptv)
 container to get IPTV working on your LAN. This container uses
 [igmpproxy](https://github.com/pali/igmpproxy) to route multicast IPTV traffic between WAN and LAN.
 
+### Installation
 Before we set up the `udm-iptv` container, make sure you have the
 [on-boot-script](https://github.com/boostchicken/udm-utilities/tree/master/on-boot-script)
 installed.  SSH into your machine and execute the following commands:
 
 ```bash
-tee  /mnt/data/on_boot.d/15-iptv.sh <<EOF >/dev/null
-if podman container exists iptv; then
-  podman rm -f iptv
-fi
-podman run --network=host --privileged \
-    --name iptv -i -d --restart always \
-    -e IPTV_WAN_INTERFACE="eth8" \
-    -e IPTV_WAN_RANGES="213.75.112.0/21 217.166.0.0/16" \
-    -e IPTV_LAN_INTERFACES="br0" \
-    fabianishere/udm-iptv:1.1 -d -v
-EOF
-chmod +x /mnt/data/on_boot.d/15-iptv.sh
+curl -s https://raw.githubusercontent.com/fabianishere/udm-kernel-tools/master/docs/iptv/install.sh | sh
 ```
 
-This script will run after every boot of your UniFi Dream Machine and set up the
-applications necessary to route the IPTV traffic.
+This script will install a boot script that runs after every boot of your 
+UniFi Dream Machine and set up the applications necessary to route the IPTV traffic.
+You may also download and inspect the script manually before running it.
 
-**Note:** This configuration contains IP ranges and interfaces specific to my
-KPN setup. Please modify to your specific setup. See below for a list of options
-to configure the container.
+### Configuration
+The default configuration contains IP ranges and interfaces specific to my
+KPN setup. Please modify the options in `/mnt/data/on_boot.d/15-iptv.sh` to your
+specific setup. See below for a full list of options to configure the container.
 
 | Environmental Variable | Description | Default |
 | ------------------------|----------- |---------|
@@ -148,6 +140,13 @@ to configure the container.
 | IPTV_WAN_DHCP_OPTIONS   | [DHCP options](https://busybox.net/downloads/BusyBox.html#udhcpc) to send when requesting an IP address | -O staticroutes -V IPTV_RG |
 | IPTV_LAN_INTERFACES     | Interfaces on which IPTV should be made available | br0 |
 | IPTV_LAN_RANGES         | IP ranges from which IPTV will be watched | 192.168.0.0/16 |
+
+### Running
+After you have configured the options for your setup, run the IPTV container as
+follows:
+```bash
+/mnt/data/on_boot.d/15-iptv.sh
+```
 
 ## Troubleshooting and Known Issues
 
@@ -167,8 +166,8 @@ Use the following steps to debug `igmpproxy` if it is behaving strangely:
         -e IPTV_WAN_INTERFACE="eth8" \
         -e IPTV_WAN_RANGES="213.75.112.0/21 217.166.0.0/16" \
         -e IPTV_LAN_INTERFACES="br0" \
-   -    fabianishere/udm-iptv:1.1
-   +    fabianishere/udm-iptv:1.1 -d -v
+   -    fabianishere/udm-iptv
+   +    fabianishere/udm-iptv -d -v
       ```
    Make sure you run the script afterwards to apply the changes.
 2. **Viewing debug logs**  
