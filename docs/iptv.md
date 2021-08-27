@@ -116,20 +116,36 @@ container to get IPTV working on your LAN. This container uses
 ### Installation
 Before we set up the `udm-iptv` container, make sure you have the
 [on-boot-script](https://github.com/boostchicken/udm-utilities/tree/master/on-boot-script)
-installed.  SSH into your machine and execute the following commands:
+installed.  SSH into your machine and execute the following command:
 
 ```bash
 curl -s https://raw.githubusercontent.com/fabianishere/udm-kernel-tools/master/docs/iptv/install.sh | sh
 ```
 
-This script will install a boot script that runs after every boot of your 
-UniFi Dream Machine and set up the applications necessary to route the IPTV traffic.
+This script will install a boot script that runs after every boot of your
+UniFi Dream Machine and will set up the applications necessary to route
+IPTV traffic.
 You may also download and inspect the script manually before running it.
 
+
+Below is a useful list of configuration values for various IPTV providers:
+
+| Provider | WAN VLAN | WAN Ranges | Notes |
+| ---------|---------:|------------|-------|
+| KPN (NL) | 4 | 213.75.0.0/16 217.166.0.0/16 | |
+
+Feel free to update this list with the configuration of your provider.
+
+### Running
+After installation, run the IPTV container as follows:
+```bash
+/mnt/data/on_boot.d/15-iptv.sh
+```
+
 ### Configuration
-The default configuration contains IP ranges and interfaces specific to my
-KPN setup. Please modify the options in `/mnt/data/on_boot.d/15-iptv.sh` to your
-specific setup. See below for a full list of options to configure the container.
+You can modify the configuration of the container after installation in the installed
+boot script at `/mnt/data/on_boot.d/15-iptv.sh`. 
+See below for a reference of the available options to configure.
 
 | Environmental Variable | Description | Default |
 | ------------------------|----------- |---------|
@@ -139,13 +155,6 @@ specific setup. See below for a full list of options to configure the container.
 | IPTV_WAN_VLAN_INTERFACE | Name of the VLAN interface to be created | iptv |
 | IPTV_WAN_DHCP_OPTIONS   | [DHCP options](https://busybox.net/downloads/BusyBox.html#udhcpc) to send when requesting an IP address | -O staticroutes -V IPTV_RG |
 | IPTV_LAN_INTERFACES     | Interfaces on which IPTV should be made available | br0 |
-
-### Running
-After you have configured the options for your setup, run the IPTV container as
-follows:
-```bash
-/mnt/data/on_boot.d/15-iptv.sh
-```
 
 ## Troubleshooting and Known Issues
 
