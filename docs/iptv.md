@@ -139,7 +139,6 @@ specific setup. See below for a full list of options to configure the container.
 | IPTV_WAN_VLAN_INTERFACE | Name of the VLAN interface to be created | iptv |
 | IPTV_WAN_DHCP_OPTIONS   | [DHCP options](https://busybox.net/downloads/BusyBox.html#udhcpc) to send when requesting an IP address | -O staticroutes -V IPTV_RG |
 | IPTV_LAN_INTERFACES     | Interfaces on which IPTV should be made available | br0 |
-| IPTV_LAN_RANGES         | IP ranges from which IPTV will be watched | 192.168.0.0/16 |
 
 ### Running
 After you have configured the options for your setup, run the IPTV container as

@@ -23,7 +23,6 @@ IPTV_WAN_RANGES="213.75.112.0/21 217.166.0.0/16"
 IPTV_WAN_VLAN="4"
 IPTV_WAN_DHCP_OPTIONS="-O staticroutes -V IPTV_RG"
 IPTV_LAN_INTERFACES="br0"
-IPTV_LAN_RANGES="192.168.0.0/16"
 
 if podman container exists iptv; then
   podman rm -f iptv
@@ -35,7 +34,7 @@ podman run --network=host --privileged \\
     -e IPTV_WAN_VLAN="\$IPTV_WAN_VLAN" \\
     -e IPTV_WAN_DHCP_OPTIONS="\$IPTV_WAN_DHCP_OPTIONS" \\
     -e IPTV_LAN_INTERFACES="\$IPTV_LAN_INTERFACES" \\
-    -e IPTV_LAN_RANGES="\$IPTV_LAN_RANGES" \\
+    -e IPTV_LAN_RANGES="" \\
     fabianishere/udm-iptv
 EOF
 chmod +x /mnt/data/on_boot.d/15-iptv.sh
