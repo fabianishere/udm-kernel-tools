@@ -19,7 +19,7 @@ DEFAULT_WAN_PORT=$(grep -q "UDMPRO" /etc/board.info && echo "eth8" || echo "eth4
 
 tee  /mnt/data/on_boot.d/15-iptv.sh <<EOF >/dev/null
 IPTV_WAN_INTERFACE="$DEFAULT_WAN_PORT"
-IPTV_WAN_RANGES="213.75.112.0/21 217.166.0.0/16"
+IPTV_WAN_RANGES="213.75.0.0/16 217.166.0.0/16"
 IPTV_WAN_VLAN="4"
 IPTV_WAN_DHCP_OPTIONS="-O staticroutes -V IPTV_RG"
 IPTV_LAN_INTERFACES="br0"
