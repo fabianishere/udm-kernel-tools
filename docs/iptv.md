@@ -119,7 +119,7 @@ Before we set up the `udm-iptv` container, make sure you have the
 installed.  SSH into your machine and execute the following command:
 
 ```bash
-curl -s https://raw.githubusercontent.com/fabianishere/udm-kernel-tools/master/docs/iptv/install.sh | sh
+sh -c "$(curl -s https://raw.githubusercontent.com/fabianishere/udm-kernel-tools/master/docs/iptv/install.sh)"
 ```
 
 This script will install a boot script that runs after every boot of your
