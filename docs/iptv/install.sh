@@ -23,7 +23,11 @@ UDM_TYPE=$(grep -q "UDMPRO" /etc/board.info && echo "UDMP" || echo "UDMB")
 _ansi() {
     escape="\e[$1m"
     shift
-    printf "%b%s\e[0m" "$escape" "$*"
+    if [ -z ${NO_COLOR+x} ]; then
+        printf "%b%s\e[0m" "$escape" "$*"
+    else
+        printf "%s" "$*"
+    fi
 }
 
 _question()  {
