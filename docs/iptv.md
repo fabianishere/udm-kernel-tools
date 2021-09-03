@@ -1,10 +1,11 @@
 # IPTV on the UDM/P
 
-This document describes how to use IPTV with the UDM/P. These instructions have
-been tested with the IPTV network from KPN (ISP in the Netherlands). However,
-they should be applicable for other ISPs as well.
+This document describes how to set up IPTV with the UDM/P.
+These instructions have  been tested with the IPTV network from KPN
+(ISP in the Netherlands).
+However, the general approach should be applicable for other ISPs as well.
 
-For IPTV on the UniFi Security Gateway, please refer to the
+For getting IPTV to work on the UniFi Security Gateway, please refer to the
 [following guide](https://github.com/basmeerman/unifi-usg-kpn).
 
 ## Contents
@@ -43,7 +44,7 @@ For IPTV on the UniFi Security Gateway, please refer to the
        |  +-----------------+              |
        |                    |              |
 +--------------+       +---------+      +-----+
-| IPTV Decoder |       | Wifi AP |      | ... |
+| IPTV Decoder |       | WiFi AP |      | ... |
 +--------------+       +---------+      +-----+
   - KPN IPTV
   - Netflix
@@ -65,13 +66,17 @@ Make sure you check the following prerequisites before trying the other steps:
    installed on your UDM/P.
 3. The switches in-between the IPTV decoder and the UDM/P must have IGMP
    snooping enabled.
-4. Connect a WAN port (eth8 on UDMP) to the FTTP NTU of your ISP (e.g., KPN).
+4. The FTTP NTU (or any other type of modem) of your ISP must be connected to 
+   one of the WAN ports on the UDM/P.
 
 ## Setting up Internet Connection
 
-The first step is to setup your internet connection to your ISP with the UDM/P
+The first step is to set up your internet connection to your ISP with the UDM/P
 acting as modem, instead of some intermediate device. These steps might differ
 per ISP, so please check the requirements for your ISP.
+
+### KPN
+If you are a customer of KPN, you can set up the WAN connection as follows:
 
 1. In your UniFi Dashboard, go to **Settings > Internet**.
 2. Select the WAN port that is connected to the FTTP NTU.
@@ -90,7 +95,11 @@ additional DHCP options. You can add these DHCP options as follows:
 
 1. In your UniFi Dashboard, go to **Settings > Networks**.
 2. Select the LAN network on which IPTV will be used.
-3. Go to **Advanced > DHCP Option** and add the following options:
+   We recommend creating a separate LAN network for IPTV traffic if possible in
+   order to reduce interference of other devices on the network.
+4. Enable **Advanced > IGMP Snooping**, so IPTV traffic is only sent to
+   devices that should receive it.
+5. Go to **Advanced > DHCP Option** and add the following options:
 
    | Name      | Code | Type       | Value          |
    |-----------|:----:|------------|----------------|
@@ -161,6 +170,25 @@ See below for a reference of the available options to configure.
 Below is a non-exhaustive list of issues that might occur while getting IPTV to
 run on the UDM/P, as well as troubleshooting steps. Please check these
 instructions before reporting an issue on issue tracker.
+
+### Debugging DHCP
+
+Use the following steps to verify whether the IPTV container is obtaining an
+IP address from the IPTV network via DHCP:
+
+1. Verify that the VLAN interface has obtained an IP address:
+   ```bash
+   $ ip -4 addr show dev iptv
+   43: iptv@eth8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+      inet XX.XX.XX.XX/22 brd XX.XX.XX.XX scope global iptv
+        valid_lft forever preferred_lft forever
+   ```
+2. Verify that you have obtained the routes from the DHCP server:
+   ```bash
+   $ ip route list
+   ...
+   XX.XX.XX.X/21 via XX.XX.XX.X dev iptv
+   ```
 
 ### Debugging IGMP Proxy
 
