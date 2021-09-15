@@ -125,10 +125,20 @@ reboot.
 
 ### Restoring the stock kernel
 If you are running a custom kernel and wish to return the stock kernel, simply
-reboot the device:
+reboot the device (from UbiOS):
 ```bash
 reboot
 ```
+
+### Removing udm-kernel-tools
+To remove `udm-kernel-tools` and the custom kernels you have installed, run
+the following command in UniFi OS:
+
+```bash
+apt remove udm-kernel*
+```
+
+This will remove the artifacts on your device related to this project.
 
 ## Compatibility
 Since the project requires firmware-specific binaries (e.g., kernel modules), you
