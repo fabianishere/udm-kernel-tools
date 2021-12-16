@@ -13,7 +13,7 @@ maintain `udm-kernel-tools`.
 To start, make sure you have installed at least the following packages:
 
 ```bash
-apt install devscripts debhelper wget git gcc-aarch64-linux-gnu bison flex
+apt install devscripts debhelper wget git gcc-aarch64-linux-gnu bison flex libssl-dev
 ```
 
 #### Obtaining the source
