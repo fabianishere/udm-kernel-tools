@@ -8,4 +8,4 @@
 # (at your option) any later version.
 
 UDM_VERSION = 1.11.0-23
-UDM_COMMIT = 89130462d8a36d535c1d0ce50a7a153ad1587865
+UDM_COMMIT = c1c6f387a454ffffd431dc23c85acc4afc524268
