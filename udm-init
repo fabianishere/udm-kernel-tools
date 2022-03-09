@@ -48,7 +48,7 @@ setup_modprobe_config() {
     KERNEL_MODDIR=$(find "$OVERLAY_ROOT"/lib/modules/ -mindepth 1 -maxdepth 1 -type d | head -n1)
     KERNEL_RELEASE=$(basename "$KERNEL_MODDIR")
     if [ -d "$KERNEL_MODDIR/extra" ]; then
-        find "$KERNEL_MODDIR/extra" -name '*.ko' \
+        find "$KERNEL_MODDIR/extra" -name '*.ko' -not -name 'wireguard.ko' \
             | sed "s/.*\///; s/\.ko//" \
             | awk "{print \"install \" \$0 \" /sbin/modprobe --ignore-install -f -S $KERNEL_RELEASE \" \$0}" \
             > "$OVERLAY_UPPER"/etc/modprobe.d/udm-kernel-tools.conf
