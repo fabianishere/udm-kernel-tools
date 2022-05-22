@@ -1,0 +1,12 @@
+./README.md
+./debian/copyright
+./man/udm-bootctl.8
+./man/udm-mkinitramfs.8
+./build/modules
+./kexec-mod/user/redir.so
+./udm-init
+./udm-kexec
+./udm-kexec.init.d
+./udm-bootctl
+./udm-mkinitramfs
+./kernel

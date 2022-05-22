@@ -1,0 +1,17 @@
+Package: udm-kernel-tools
+Version: 1.1.4
+Architecture: arm64
+Maintainer: Fabian Mastenbroek <mail.fabianm@gmail.com>
+Installed-Size: 484
+Depends: kexec-tools, busybox-static, kmod, cpio
+Section: admin
+Priority: optional
+Homepage: https://github.com/fabianishere/udm-kernel-tools
+Description: Tools for bootstrapping custom kernels on the UniFi Dream Machine
+ This package provides tools for bootstrapping custom kernels on the UniFi
+ Dream Machine and UniFi Dream Machine Pro from Ubiquiti.
+ .
+ Replacing the kernels on these devices is not trivial due to the restrictions
+ on the bootloader and root filesystems of these devices. This package works
+ around these issue by having the stock kernel act as a second stage bootloader
+ for custom kernels.

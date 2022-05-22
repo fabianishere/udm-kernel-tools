@@ -1,0 +1,2 @@
+/etc/kernel/postinst.d/udm-kernel-tools
+/etc/kernel/postrm.d/udm-kernel-tools

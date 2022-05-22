@@ -1,6 +1,1 @@
-dh_auto_build
-dh_auto_build
-dh_auto_build
-dh_auto_build
-dh_auto_build
-dh_auto_build
+override_dh_installsystemd dh_installsystemd
