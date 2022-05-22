@@ -1,0 +1,30 @@
+# Automatically added by dh_installsystemd/11.1.6ubuntu2
+if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
+	if deb-systemd-helper debian-installed 'udm-autoboot.service'; then
+		# This will only remove masks created by d-s-h on package removal.
+		deb-systemd-helper unmask 'udm-autoboot.service' >/dev/null || true
+
+		if deb-systemd-helper --quiet was-enabled 'udm-autoboot.service'; then
+			# Create new symlinks, if any.
+			deb-systemd-helper enable 'udm-autoboot.service' >/dev/null || true
+		fi
+	fi
+
+	# Update the statefile to add new symlinks (if any), which need to be cleaned
+	# up on purge. Also remove old symlinks.
+	deb-systemd-helper update-state 'udm-autoboot.service' >/dev/null || true
+fi
+# End automatically added section
+# Automatically added by dh_installsystemd/11.1.6ubuntu2
+if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
+	if [ -d /run/systemd/system ]; then
+		systemctl --system daemon-reload >/dev/null || true
+		if [ -n "$2" ]; then
+			_dh_action=restart
+		else
+			_dh_action=start
+		fi
+		deb-systemd-invoke $_dh_action 'udm-autoboot.service' >/dev/null || true
+	fi
+fi
+# End automatically added section

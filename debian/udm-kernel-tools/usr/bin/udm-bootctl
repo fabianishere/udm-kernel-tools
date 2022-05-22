@@ -1,0 +1,316 @@
+#!/bin/bash
+# Bash script for booting into custom kernels on the UDM (Pro).
+#
+# Copyright (C) 2021 Fabian Mastenbroek.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+set -e
+
+TOOLS_PATH=/usr/lib/udm-kernel-tools
+
+# Copy files to the UniFi OS root system.
+# Arguments:
+# $1 - src: Path to source to copy.
+# $2 - dst: Path to destination to copy to.
+_copy() {
+    scp -P "$(cat /etc/unifi-os/ssh_proxy_port)" -o StrictHostKeyChecking=no -q -r "$1" "root@localhost:$2"
+}
+
+# Load kernel image and possible initramfs into memory before boot.
+# This function will copy over udm-kernel-tools, kexec and kernel image to host.
+# Then, it will use the kexec binary to load the kernel image into memory.
+# Arguments:
+# $1 - target: Target directory to copy the kernel and initramfs to.
+# $2 - kernel: Path to kernel to copy.
+# $3 - initrd: Path to initramfs to copy.
+_do_load() {
+    target=$1
+    kernel=$2
+    initrd=$3
+
+    _copy $TOOLS_PATH /usr/lib
+    _copy /sbin/kexec /sbin/
+    _copy "$kernel" "$target/kernel.gz"
+    if [ -n "$initrd" ]; then
+        _copy "$initrd" "$target/initramfs.gz"
+    fi
+    _copy $TOOLS_PATH/udm-kexec.init.d /etc/init.d/S00000kexec
+
+    # Decompress kernel before loading via Kexec as it does not support
+    # compressed kernels yet.
+    ssh-proxy "gunzip $target/kernel.gz"
+
+    args="-l $target/kernel --reuse-cmdline"
+    # Force kexec-tools to load the kernel image inside the right memory region
+    # See https://github.com/fabianishere/udm-kernel-tools/pull/14#issuecomment-850786069
+    args+=" --mem-min=0x04000000 --mem-max=0x06000000"
+    if [ -n "$initrd" ]; then
+        args+=" --initrd=$target/initramfs.gz"
+    fi
+    ssh-proxy "$TOOLS_PATH/udm-kexec $args"
+}
+
+# Perform the kexec boot.
+# This function triggers a reboot, which will in turn trigger the kexec command
+# as soon the the inittab services are stopped.
+_do_boot() {
+    echo "Triggering system boot..."
+    ssh-proxy "reboot"
+}
+
+# Print the help message of this program.
+bootctl_usage()
+{
+	cat << EOF
+
+Usage: $0 [OPTIONS...] COMMAND [ARGS]...
+
+Manage custom kernels for the UniFi Dream Machine (Pro).
+
+Commands:
+  list              List available kernels to boot into
+  boot        ID    Boot into custom kernel
+  set-default ID    Set default boot entry
+
+Options:
+  -h, --help    Show this message and exit
+
+See udm-bootctl(8) for further details.
+
+EOF
+}
+
+# Print the help message for the list command.
+bootctl_list_usage()
+{
+	cat << EOF
+
+Usage: $0 list
+
+List the available kernels that the user can boot into.
+
+EOF
+}
+
+# List the available kernels.
+bootctl_list() {
+    while getopts ":h" arg; do
+    case $arg in
+        h | *) # Display help.
+            bootctl_list_usage
+            exit 0
+            ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+
+    if test -z "$(find /boot -maxdepth 1 -name 'vmlinuz-*' -print -quit)"; then
+        echo "No kernels found."
+        exit 0
+    fi
+
+    printf "%-40s\t%s\n" "Version" "Initrd"
+    for kernel in /boot/vmlinuz-*; do
+        version=$(basename "$kernel" | sed -e "s/^vmlinuz-//")
+        initrd=$([ -f /boot/initramfs-"$version".gz ] && echo "yes" || echo "no")
+        if [ "$(readlink -- "/boot/vmlinuz")" = "$kernel" ]; then
+            printf "%-40s\t%s\n" "$version (default)" "$initrd"
+        else
+            printf "%-40s\t%s\n" "$version" "$initrd"
+        fi
+    done
+}
+
+# Print the help message for the boot command.
+bootctl_boot_usage() {
+	cat << EOF
+
+Usage: $0 boot [OPTIONS...] [<kernel>]
+
+Boot into custom kernel.
+
+Options:
+  -i            Path to custom initramfs file
+  -h, --help    Show this message and exit
+
+EOF
+}
+
+# Boot into a custom kernel.
+bootctl_boot() {
+    initrd=
+
+    while getopts ":hi:" arg; do
+    case $arg in
+        i)
+            initrd=$OPTARG
+            ;;
+        h | *) # Display help.
+            bootctl_boot_usage
+            exit 0
+            ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+
+    kernel=$1
+    kernel_path=
+    initrd_path=
+
+    if [ -z "$kernel" ]; then
+        if [ -e /boot/vmlinuz ]; then
+            kernel_path=$(realpath /boot/vmlinuz)
+        else
+            echo "No default kernel available."
+            exit 1
+        fi
+    elif  [ -e "$KERNEL_IMAGE" ]; then
+        kernel_path=$(realpath "$kernel")
+    elif [ -e "/boot/vmlinuz-$kernel" ]; then
+        kernel_path="/boot/vmlinuz-$kernel"
+    else
+        echo "$1: kernel not found."
+        exit 1
+    fi
+
+    version=$(basename "$kernel_path" | sed -e "s/^vmlinuz-//")
+
+    if [ -n "$initrd" ]; then
+        if [ -e "$initrd" ]; then
+            initrd_path=$(realpath "$initrd")
+        else
+            echo "$initrd: initrd not found."
+            exit 1
+        fi
+    elif [ -e "/boot/initramfs-$version".gz ]; then
+        initrd_path=$(realpath "/boot/initramfs-$version.gz")
+    fi
+
+    target=$(ssh-proxy "mktemp -d -t udmXXXXXX")
+
+    echo "Loading kernel $version..."
+    _do_load "$target" "$kernel_path" "$initrd_path"
+    _do_boot
+}
+
+# Print the help message for the autoboot command.
+bootctl_autoboot_usage() {
+	cat << EOF
+
+Usage: $0 autoboot [OPTIONS...]
+
+ Automatically boot into custom kernel.
+
+Options:
+  -h, --help    Show this message and exit
+
+EOF
+}
+
+# Automatically boot into custom kernel
+bootctl_autoboot() {
+    while getopts ":h" arg; do
+    case $arg in
+        h | *) # Display help.
+            bootctl_autoboot_usage
+            exit 0
+            ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+
+    if ssh-proxy "test -f /.udm-kernel-tools"; then
+        echo "Successfully booted into custom kernel.."
+        # Remove mark to indicate that we are booting into a custom kernel
+        rm -f /mnt/persistent/.udm-boot-mark
+        exit 0
+    elif [ -f /mnt/persistent/.udm-boot-mark ]; then
+        echo "Custom kernel boot seems to have failed. Aborting..."
+        exit 1
+    else
+        touch /mnt/persistent/.udm-boot-mark
+        bootctl_boot
+    fi
+}
+
+# Print the help message for the set-default command.
+bootctl_set_default_usage()
+{
+	cat << EOF
+
+Usage: $0 set-default [OPTIONS...] <kernel>
+
+Set the specified kernel as the default kernel
+
+Options:
+  -h, --help    Show this message and exit
+
+EOF
+}
+
+# Set the default kernel.
+bootctl_set_default() {
+    while getopts ":h" arg; do
+    case $arg in
+        h | *) # Display help.
+            bootctl_set_default_usage
+            exit 0
+            ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+
+    version=$1
+    if [ -z "$version" ]; then
+        echo "Please specify a kernel version."
+        bootctl_set_default_usage
+        exit 1
+    elif [ ! -e "/boot/vmlinuz-$version" ]; then
+        echo "$version: kernel version not found."
+        exit 1
+    fi
+
+    ln -sf "/boot/vmlinuz-$version" /boot/vmlinuz
+    if [ -e "/boot/initramfs-$version.gz" ]; then
+        ln -sf "/boot/initramfs-$version.gz" /boot/initramfs.gz
+    else
+        rm -f /boot/initramfs.gz
+    fi
+}
+
+# Check if the user passed any argument
+if [ $# -eq 0 ]; then
+    bootctl_usage
+    exit 1
+fi
+
+case $1 in
+    -h|--help)
+        bootctl_usage
+        exit 0
+        ;;
+    list)
+        shift
+        bootctl_list "$@"
+        ;;
+    boot)
+        shift
+        bootctl_boot "$@"
+        ;;
+    autoboot)
+        shift
+        bootctl_autoboot "$@"
+        ;;
+    set-default)
+        shift
+        bootctl_set_default "$@"
+        ;;
+    *)
+        bootctl_usage
+        exit 1
+        ;;
+esac

@@ -1,0 +1,68 @@
+#!/bin/sh
+# Post install script for udm-kernel-tools.
+#
+# Copyright (C) 2021 Fabian Mastenbroek.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+set -e
+
+case "$1" in
+    triggered|configure)
+        echo "udm-init: configuring..."
+        for kernel in /lib/modules/*; do
+            if [ ! -d "$kernel" ]; then
+                continue
+            fi
+            version=$(basename "$kernel")
+
+            echo "udm-init: generating initramfs for kernel $version..."
+            udm-mkinitramfs -o /boot/initramfs-"$version".gz "$version"
+        done
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+# Automatically added by dh_installsystemd/11.1.6ubuntu2
+if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
+	if deb-systemd-helper debian-installed 'udm-autoboot.service'; then
+		# This will only remove masks created by d-s-h on package removal.
+		deb-systemd-helper unmask 'udm-autoboot.service' >/dev/null || true
+
+		if deb-systemd-helper --quiet was-enabled 'udm-autoboot.service'; then
+			# Create new symlinks, if any.
+			deb-systemd-helper enable 'udm-autoboot.service' >/dev/null || true
+		fi
+	fi
+
+	# Update the statefile to add new symlinks (if any), which need to be cleaned
+	# up on purge. Also remove old symlinks.
+	deb-systemd-helper update-state 'udm-autoboot.service' >/dev/null || true
+fi
+# End automatically added section
+# Automatically added by dh_installsystemd/11.1.6ubuntu2
+if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
+	if [ -d /run/systemd/system ]; then
+		systemctl --system daemon-reload >/dev/null || true
+		if [ -n "$2" ]; then
+			_dh_action=restart
+		else
+			_dh_action=start
+		fi
+		deb-systemd-invoke $_dh_action 'udm-autoboot.service' >/dev/null || true
+	fi
+fi
+# End automatically added section
+
+
+exit 0

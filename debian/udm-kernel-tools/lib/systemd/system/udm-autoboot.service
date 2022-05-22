@@ -1,0 +1,10 @@
+[Unit]
+Description=Autoboot into custom kernel
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=udm-bootctl autoboot
+
+[Install]
+WantedBy=multi-user.target
