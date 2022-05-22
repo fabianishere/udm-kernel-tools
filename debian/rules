@@ -23,7 +23,7 @@ BUILD_DIR ?= build
 KEXEC_MOD_SRC ?= kexec-mod
 
 # The UDM versions to support for the build
-UDM_VERSIONS ?= 1.8.6 1.9.3 1.10.0 1.10.4 1.11.0 1.11.4
+UDM_VERSIONS ?= 1.8.6 1.9.3 1.10.0 1.10.4 1.11.0 1.11.4 1.12.21
 
 %:
 	dh $@

@@ -1,0 +1,38 @@
+#!/bin/sh
+# Shell script that wraps the kexec binary to support the kexec module.
+#
+# Copyright (C) 2021 Fabian Mastenbroek.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+set -e
+
+BASEDIR=$(realpath "$(dirname "$0")")
+UDM_VERSION=$(uname -r | sed 's/.*v\([0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\)\?\).*/\1/')
+MODULE_DIR=$BASEDIR/modules/v$UDM_VERSION
+
+# Check whether the kernel modules are already inserted
+if [ ! -e /dev/kexec ]; then
+    echo "Inserting kexec kernel modules..."
+
+    # Check if the kernel version is supported
+    if [ ! -d "$MODULE_DIR" ]; then
+        echo "Kernel version not supported (v$UDM_VERSION)"
+        echo "Make sure you have installed the latest version of udm-kernel-tools..."
+        exit 1
+    fi
+
+    # We need to shim the hypervisor vectors on the UDM since its stock kernel
+    # has no support for kexec at all.
+    insmod "$MODULE_DIR"/kexec_mod_arm64.ko shim_hyp=1
+    insmod "$MODULE_DIR"/kexec_mod.ko
+fi
+
+# The redirection library should reside in the same directory as this script.
+export LD_PRELOAD=$BASEDIR/redir.so
+
+#
+exec /sbin/kexec "$@"

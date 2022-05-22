@@ -1,0 +1,6 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/rgates/udm-kernel-tools'
+make: Leaving directory '/home/rgates/udm-kernel-tools'
+ 
+make: *** No targets specified and no makefile found.  Stop.
+
