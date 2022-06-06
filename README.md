@@ -151,6 +151,7 @@ Currently, the releases of this project support the following firmware versions:
 - 1.10.4
 - 1.11.0
 - 1.11.4
+- 1.12.22
 
 To build the project for custom firmware versions, please refer to the [Maintenance Guide](MAINTENANCE.md).
 
