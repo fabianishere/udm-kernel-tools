@@ -59,8 +59,8 @@ the package version you want to install and download the selected Debian package
 for instance:
 
 ```bash
-wget https://github.com/fabianishere/udm-kernel-tools/releases/download/v1.1.4/udm-kernel-tools_1.1.3_arm64.deb
-apt install ./udm-kernel-tools_1.1.4_arm64.deb
+wget https://github.com/fabianishere/udm-kernel-tools/releases/download/v1.1.5/udm-kernel-tools_1.1.5_arm64.deb
+apt install ./udm-kernel-tools_1.1.5_arm64.deb
 ```
 
 ### Installing a custom kernel
