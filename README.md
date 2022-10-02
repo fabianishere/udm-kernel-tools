@@ -59,8 +59,8 @@ the package version you want to install and download the selected Debian package
 for instance:
 
 ```bash
-wget https://github.com/fabianishere/udm-kernel-tools/releases/download/v1.1.5/udm-kernel-tools_1.1.5_arm64.deb
-apt install ./udm-kernel-tools_1.1.5_arm64.deb
+wget https://github.com/fabianishere/udm-kernel-tools/releases/download/v1.1.6/udm-kernel-tools_1.1.6_arm64.deb
+apt install ./udm-kernel-tools_1.1.6_arm64.deb
 ```
 
 ### Installing a custom kernel
@@ -152,6 +152,7 @@ Currently, the releases of this project support the following firmware versions:
 - 1.11.0
 - 1.11.4
 - 1.12.22
+- 1.12.30
 
 To build the project for custom firmware versions, please refer to the [Maintenance Guide](MAINTENANCE.md).
 
