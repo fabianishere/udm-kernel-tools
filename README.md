@@ -135,7 +135,7 @@ To remove `udm-kernel-tools` and the custom kernels you have installed, run
 the following command in UniFi OS:
 
 ```bash
-apt remove udm-kernel*
+apt remove 'udm-kernel*'
 ```
 
 This will remove the artifacts on your device related to this project.
