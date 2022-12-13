@@ -8,15 +8,16 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: [ubuntu-18.04]
+    runs-on: [ubuntu-20.04]
     steps:
     - name: Checkout Sources
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         path: udm-kernel-tools
         submodules: recursive
     - name: Setup Dependencies
       run: |
+        sudo apt-get update
         sudo apt-get install devscripts git gcc-aarch64-linux-gnu equivs
         sudo mk-build-deps --install udm-kernel-tools/debian/control
     - name: Build Package
@@ -26,7 +27,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{secrets.PAT}}
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: build-artifacts
         if-no-files-found: error
@@ -37,13 +38,13 @@ jobs:
           *.dsc
   release:
     name: Publish Release
-    runs-on: [ubuntu-18.04]
+    runs-on: [ubuntu-20.04]
     needs: build
     steps:
     - name: Checkout Sources
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Download Artifacts
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: build-artifacts
         path: build-artifacts
@@ -52,12 +53,12 @@ jobs:
       run: |
         ref="${{ github.ref}}"
         release_name=${ref#"refs/tags/"}
-        echo "::set-output name=release::$release_name"
+        echo "release=$(scripts/version.sh)" >> $GITHUB_OUTPUT
         changelog=$(dpkg-parsechangelog -c 1 -l debian/changelog)
         changelog="${changelog//'%'/'%25'}"
         changelog="${changelog//$'\n'/'%0A'}"
         changelog="${changelog//$'\r'/'%0D'}"
-        echo "::set-output name=changelog::$changelog"
+        echo "changelog=$changelog" >> $GITHUB_OUTPUT
     - name: Create Release
       uses: softprops/action-gh-release@v1
       env:
