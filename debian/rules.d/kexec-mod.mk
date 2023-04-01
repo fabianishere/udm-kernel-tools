@@ -7,16 +7,15 @@
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 
-# Include configuration for the specific version
-include debian/config/v${UDM_VERSION}/config.mk
 
 BUILD_DIR ?= build
 
 # The location from which the kernel sources are downloaded
+UDM_COMMIT = 261fc64a700803935326bad8301bdde3f62e4f05
 UDM_KERNEL_URL ?= https://github.com/fabianishere/udm-kernel/archive/${UDM_COMMIT}.tar.gz
 UDM_KERNEL_TARBALL := ${BUILD_DIR}/$(shell basename ${UDM_KERNEL_URL})
-UDM_KERNEL_SRC ?= ${BUILD_DIR}/kernel-${UDM_COMMIT}
-UDM_MODULE_DIR ?= ${BUILD_DIR}/modules/v${UDM_VERSION}
+UDM_KERNEL_SRC ?= ${BUILD_DIR}/kernel
+UDM_MODULE_DIR ?= ${BUILD_DIR}/modules
 
 KEXEC_MOD_SRC ?= kexec-mod
 
@@ -35,15 +34,13 @@ ${UDM_KERNEL_SRC}: ${UDM_KERNEL_TARBALL}
 	mkdir -p $@
 	tar -C $@ --strip-components=1 -xf ${UDM_KERNEL_TARBALL}
 
-${UDM_KERNEL_SRC}/v${UDM_VERSION}.config: debian/config/v${UDM_VERSION}/config.udm | ${UDM_KERNEL_SRC}
+${UDM_KERNEL_SRC}/.config: debian/udm.config | ${UDM_KERNEL_SRC}
 	ln -s $(realpath $<) $@
-	cp $@ ${UDM_KERNEL_SRC}/.config
 	$(MAKE) -C ${UDM_KERNEL_SRC} olddefconfig LOCALVERSION=
 	$(MAKE) -C ${UDM_KERNEL_SRC} modules_prepare LOCALVERSION=
 
-${UDM_MODULE_DIR}/kexec_mod.ko ${UDM_MODULE_DIR}/kexec_mod_${ARCH}.ko: ${UDM_KERNEL_SRC}/v${UDM_VERSION}.config
+${UDM_MODULE_DIR}/kexec_mod.ko ${UDM_MODULE_DIR}/kexec_mod_${ARCH}.ko: ${UDM_KERNEL_SRC}/.config
 	mkdir -p ${UDM_MODULE_DIR}
-	rm -rf ${KEXEC_MOD_SRC}/kernel/orig ${KEXEC_MOD_SRC}/kernel/arch/${ARCH}/orig
 	dh_auto_build --sourcedirectory=${KEXEC_MOD_SRC}/kernel -- KDIR=$(realpath ${UDM_KERNEL_SRC}) LDFLAGS=
 	cp ${KEXEC_MOD_SRC}/kernel/kexec_mod.ko ${UDM_MODULE_DIR}/kexec_mod.ko
 	cp ${KEXEC_MOD_SRC}/kernel/arch/${ARCH}/kexec_mod_${ARCH}.ko ${UDM_MODULE_DIR}/kexec_mod_${ARCH}.ko

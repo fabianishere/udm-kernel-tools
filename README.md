@@ -4,39 +4,18 @@ Machine (Pro).
 
 ## Introduction
 The Ubiquiti [UniFi Dream Machine](https://unifi-network.ui.com/dreammachine)
-(UDM) and UDM Pro are a class of all-in-one network appliances built by Ubiquiti.
-These devices are powered by UbiOS, which uses Linux kernel under the hood.
+(UDM) and UDM Pro are a class of all-in-one network appliances built by Ubiquiti, 
+which use the Linux kernel under the hood.
 
-However, the stock kernel on these devices lacks some important functionality
-needed for common use-cases (such as WireGuard as VPN or multicast routing support for IPTV).
-In many cases, this functionality can be enabled with a custom Linux kernel.
+The stock kernel on these devices lacks some important functionality needed for
+common use-cases (multipath routing, eBPF, containers). In many cases, this
+functionality can be enabled with a custom Linux kernel.
 
 This repository provides tools to bootstrap a custom Linux kernel on the UDM/P.
 To prevent bricking your device, this tool does not overwrite the firmware of
-the device.
-Instead, it boots directly into the custom kernel from the stock kernel
-using [kexec](https://en.wikipedia.org/wiki/Kexec) (see [How it works](#how-it-works)).
+the device. Instead, it boots directly into the custom kernel from the stock 
+kernel using [kexec](https://en.wikipedia.org/wiki/Kexec) (see [How it works](#how-it-works)).
 
-## Use-cases
-There are currently several use-cases for using a custom kernel on the
-UniFi Dream Machine (Pro). These use-cases include:
-
-1. **In-kernel [WireGuard](https://wireguard.com) support**  
-   Although you can already run a WireGuard server on your UDM/P using `wireguard-go` (see 
-   [udm-utilities](https://github.com/boostchicken/udm-utilities)), its performance
-   will be reduced due to it running in user-space. A custom kernel enables your 
-   WireGuard VPN server to utilize the kernel implementation and run at full speed.
-2. **Multicast routing support**  
-   The stock kernel of the UDM/P does not support multicast routing which is
-   needed for running `igmpproxy`. In turn, `igmpproxy` is needed to route
-   multicast traffic between WAN and LAN, which is necessary for IPTV.
-   See the [following guide](https://github.com/fabianishere/udm-iptv) for more information.
-3. [**Early boot modifications**](#overriding-files-on-root-pre-boot)  
-   Since changes to root filesystem on the UDM/P are non-persistent. It is not
-   possible with the stock kernel to perform modification to the early boot
-   process (since the [on-boot-script](https://github.com/boostchicken/udm-utilities/blob/master/on-boot-script/README.md) only runs after UniFi OS is started).
-   This project enables you to modify the root filesystem before UbiOS is started.
-   See [Overriding files on root pre-boot](#overriding-files-on-root-pre-boot) for more information. 
 
 ## Getting Started
 ### Disclaimer 
@@ -46,21 +25,14 @@ Make sure you know what you are doing and ensure you have a **backup**!
 I take no responsibility for any damage that might occur as result of using this
 project.
 
-### Entering UniFi OS
-To start, SSH into your UniFi Dream Machine (Pro) and enter the UniFi OS shell
-as follows:
-```bash
-unifi-os shell
-```
-
 ### Installing udm-kernel-tools
 Select from the [Releases](https://github.com/fabianishere/udm-kernel-tools/releases) page
 the package version you want to install and download the selected Debian package,
 for instance:
 
 ```bash
-wget https://github.com/fabianishere/udm-kernel-tools/releases/download/v1.1.7/udm-kernel-tools_1.1.7_arm64.deb
-apt install ./udm-kernel-tools_1.1.7_arm64.deb
+wget https://github.com/fabianishere/udm-kernel-tools/releases/download/v2.0.0/udm-kernel-tools_2.0.0_arm64.deb
+apt install ./udm-kernel-tools_2.0.0_arm64.deb
 ```
 
 ### Installing a custom kernel
@@ -110,18 +82,6 @@ To disable this functionality again, run the following command:
 systemctl disable udm-autoboot.service
 ```
 
-### Overriding files on root pre-boot
-Some users may wish to modify files on the root filesystem before UniFi OS boots
-(e.g., to hook into the early boot process).
-In order to facilitate this, `udm-kernel-tools` allows users to override files
-from the root filesystem using an overlay located  at `/mnt/data/udm-kernel-tools/root`,
-
-The overlay filesystem will be mounted *only* after running 
-`mkdir -p /overlay/root_ro/mnt/data/udm-kernel-tools/root` from within the *UniFi OS* shell
-or when running `mkdir -p /data/udm-kernel-tools/root` from outside UniFi OS. 
-
-Note that changes to this directory only appear on the root filesystem after
-reboot.
 
 ### Restoring the stock kernel
 If you are running a custom kernel and wish to return the stock kernel, simply
@@ -141,19 +101,9 @@ apt remove 'udm-kernel*'
 This will remove the artifacts on your device related to this project.
 
 ## Compatibility
-Since the project requires firmware-specific binaries (e.g., kernel modules), you
-possibly need to upgrade the tools after you have upgraded to a new firmware version.
-Currently, the releases of this project support the following firmware versions:
-
-- 1.8.6
-- 1.9.3
-- 1.10.0
-- 1.10.4
-- 1.11.0
-- 1.11.4
-- 1.12.22
-- 1.12.30
-- 1.12.33
+From version 2 onwards, only UniFi Dream Machine (Pro) firmware versions 2 and
+above are supported by this project. If you need support for older firmware,
+please install any of the versions below 2.
 
 To build the project for custom firmware versions, please refer to the [Maintenance Guide](MAINTENANCE.md).
 
@@ -185,7 +135,7 @@ be able to log back in to your device after a minute.
 Questions, suggestions and contributions are welcome and appreciated!
 You can contribute in various meaningful ways:
 
-* Report a bug through [Github issues](https://github.com/fabianishere/udm-kernel-tools/issues).
+* Report a bug through [GitHub issues](https://github.com/fabianishere/udm-kernel-tools/issues).
 * Propose and document use-cases for using this project.
 * Contribute improvements to the documentation.  
 * Provide feedback about how we can improve the project.
@@ -202,8 +152,8 @@ Although [udm-unlock](https://github.com/fabianishere/udm-unlock) can be used
 to overwrite the kernel boot image or root filesystem, such an approach is fragile
 and might lead to a bricked device.  
 
-To prevent touching the UDM/P firmware for booting a custom Linu kernel, we can
-employ Linux' [kexec](https://en.wikipedia.org/wiki/Kexec) functionality, which
+To prevent touching the UDM/P firmware for booting a custom Linux kernel, we can
+employ Linux's [kexec](https://en.wikipedia.org/wiki/Kexec) functionality, which
 enables Linux to act as a second stage bootloader for a custom kernel. 
 
 Since _kexec_ is not supported natively by the stock kernel running on the
@@ -212,12 +162,6 @@ UDM/P, I have backported this functionality as a
 These tools use the _kexec_ backport to load a custom kernel into memory and boot
 directly into the custom kernel. With this, we do not need to modify the device
 firmware and in case of issues, we can simply power-cycle the device.
-
-While we can now boot into a custom Linux kernel, we will find that UbiOS requires
-several proprietary kernel modules to properly function. To address this issue,
-during the [initramfs phase](https://en.wikipedia.org/wiki/Initial_ramdisk), we
-prepare a workaround that force-inserts the proprietary modules into the kernel,
-even when the versions do not match (see [here](https://github.com/fabianishere/udm-kernel-tools/blob/32f0816089c5187f4ff13e3c68f9ea2f6325c591/udm-init#L45) for the implementation).
 
 ## License
 The code is released under the GPLv2 license. See [COPYING.txt](/COPYING.txt).

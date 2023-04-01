@@ -4,9 +4,4 @@ man/udm-bootctl.8 usr/share/man/man8
 man/udm-mkinitramfs.8 usr/share/man/man8
 build/modules usr/lib/udm-kernel-tools
 kexec-mod/user/redir.so usr/lib/udm-kernel-tools
-udm-init usr/lib/udm-kernel-tools
-udm-kexec usr/lib/udm-kernel-tools
-udm-kexec.init.d usr/lib/udm-kernel-tools
 udm-bootctl usr/bin
-udm-mkinitramfs usr/bin
-kernel etc
